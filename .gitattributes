@@ -1,0 +1,10 @@
+# Skrip shell WAJIB berakhiran LF. Kalau git menukarnya jadi CRLF di Windows
+# lalu berkasnya dijalankan di Linux, pesan galatnya menyesatkan total:
+# "bad interpreter: /usr/bin/env bash^M: no such file or directory" — terbaca
+# seperti bash-nya tidak terpasang, padahal cuma satu karakter tak terlihat.
+*.sh text eol=lf
+
+# HTML dibiarkan apa adanya supaya salinannya identik bita-per-bita dengan
+# KASIR.html. sinkron.sh membandingkan sha256 keduanya; kalau git ikut
+# mengubah akhir baris, perbandingan itu akan gagal terus tanpa sebab yang jelas.
+*.html -text

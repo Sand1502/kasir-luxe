@@ -1,0 +1,23 @@
+# ── DATA TOKO — JANGAN PERNAH TERBIT ───────────────────────────────────────
+# Berkas cadangan berisi seluruh daftar barang, harga, dan riwayat transaksi
+# toko yang sungguhan. Repositori ini publik; itu tidak boleh ikut terdorong.
+cadangan-kasir-*.json
+data/
+*.csv
+
+# ── kunci tanda tangan & hasil rakitan APK ─────────────────────────────────
+*.keystore
+*.jks
+*.apk
+*.apk.idsig
+build/
+
+# ── catatan operasional internal ───────────────────────────────────────────
+# Berisi serial HP dan jalur berkas di perangkat. Tidak ada gunanya bagi
+# siapa pun di luar, dan tidak perlu diumumkan.
+CARA-AMBIL-DATA.md
+
+# ── sampah sistem ──────────────────────────────────────────────────────────
+Thumbs.db
+desktop.ini
+.DS_Store
