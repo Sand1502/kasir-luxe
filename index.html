@@ -51,7 +51,13 @@ body{
   font-size:15px; line-height:1.5; letter-spacing:-.005em;
   -webkit-font-smoothing:antialiased;
   -webkit-tap-highlight-color:transparent;
-  overflow-x:hidden;
+  /* JANGAN kembalikan jadi overflow-x:hidden di sini. Begitu overflow-x disetel
+     hidden sementara overflow-y masih visible, CSS memaksa overflow-y menjadi
+     auto — body berubah jadi wadah gulung tersendiri, dan semua anak
+     position:sticky (topbar dan bar cari) lalu menempel ke wadah yang tidak
+     pernah bergulung. Akibatnya sticky-nya diam-diam tidak bekerja sama sekali:
+     tidak ada galat, header cuma ikut hilang waktu digulung. Baris html,body
+     di atas sudah memakai overflow-x:clip yang menahan lebar tanpa efek itu. */
 }
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none}
@@ -230,7 +236,7 @@ textarea.input{min-height:74px;resize:vertical}
 
 /* ============================== APP SHELL ============================== */
 .app{min-height:100dvh;display:flex;flex-direction:column;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 74px)}
-@media(min-width:1080px){.app{padding-bottom:32px}}
+@media(min-width:900px){.app{padding-bottom:32px}}
 
 .topbar{
   position:sticky;top:0;z-index:40;
@@ -244,7 +250,7 @@ textarea.input{min-height:74px;resize:vertical}
 .topbar__store b{display:block;font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.02em}
 .topbar__store span{display:block;font-size:11px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tabs{display:none;gap:4px;background:var(--surface2);padding:4px;border-radius:13px;border:1px solid var(--line)}
-@media(min-width:1080px){.tabs{display:flex}}
+@media(min-width:900px){.tabs{display:flex}}
 .tabs button{display:flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:10px;font-size:13.5px;font-weight:650;color:var(--txt2)}
 .tabs button svg{width:16px;height:16px}
 .tabs button.is-on{background:var(--surface);color:var(--txt);box-shadow:var(--shadow-sm)}
@@ -267,7 +273,7 @@ textarea.input{min-height:74px;resize:vertical}
   backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
   border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);
 }
-@media(min-width:1080px){.bottomnav{display:none}}
+@media(min-width:900px){.bottomnav{display:none}}
 .bottomnav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:var(--nav-h);color:var(--txt3);font-size:10.5px;font-weight:650;transition:.15s}
 .bottomnav button svg{width:21px;height:21px}
 .bottomnav button.is-on{color:var(--gold)}
@@ -275,46 +281,101 @@ textarea.input{min-height:74px;resize:vertical}
 
 /* ============================== KASIR VIEW ============================== */
 /* min-width:0 wajib — tanpa ini anak grid memakai lebar min-content dan
-   halaman bisa melar ke samping di mesin render yang lebih ketat (WebView). */
+   halaman bisa melar ke samping di mesin render yang lebih ketat (WebView).
+
+   Dua titik patah, masing-masing punya alasan sendiri:
+   900px  — keranjang berhenti jadi lembar tarik dan menempel sebagai kolom.
+            Tablet 10" dipegang mendatar ada di sini, dan di meja kasir tablet
+            justru bentuk yang paling sering dipakai; menyembunyikan keranjang
+            di balik satu ketukan pada layar selebar itu cuma memperlambat.
+   1180px — baru ada sisa ruang untuk rel kategori di kiri tanpa memeras kisi
+            produk jadi satu kolom. Di bawah itu kategori tetap berupa keping
+            yang bisa digeser mendatar. */
 .pos{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
 .pos>*{min-width:0}
-@media(min-width:1080px){.pos{grid-template-columns:minmax(0,1fr) 388px}}
+@media(min-width:900px){.pos{grid-template-columns:minmax(0,1fr) 372px}}
+@media(min-width:1180px){.pos{grid-template-columns:190px minmax(0,1fr) 380px}}
 
-.searchbar{position:relative;margin-bottom:12px}
+/* ---------- REL KATEGORI (≥1180px) ---------- */
+.rail{display:none;position:sticky;top:88px;flex-direction:column;gap:3px}
+@media(min-width:1180px){.rail{display:flex}}
+.rail button{
+  display:flex;align-items:center;gap:9px;width:100%;padding:10px 12px;border-radius:11px;
+  font-size:13.4px;font-weight:640;color:var(--txt2);text-align:left;transition:.15s;
+}
+.rail button:hover{background:var(--surface2);color:var(--txt)}
+.rail button.is-on{background:var(--goldsoft);color:var(--gold)}
+.rail button i{font-style:normal;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail button u{
+  text-decoration:none;font-size:11px;font-weight:750;color:var(--txt3);flex:0 0 auto;
+  background:var(--surface2);padding:2px 7px;border-radius:6px;font-variant-numeric:tabular-nums;
+}
+.rail button.is-on u{background:rgba(227,194,126,.18);color:var(--gold)}
+
+/* ---------- BAR CARI + KATEGORI ---------- */
+/* Menempel di bawah topbar supaya kasir bisa ganti kategori atau mencari tanpa
+   menggulung balik ke atas — di daftar 60 barang, gulungan itu yang bikin antre.
+   Latarnya sengaja hampir pekat: kartu produk yang lewat di belakangnya harus
+   tidak terbaca sama sekali, karena teks yang setengah tembus terlihat seperti
+   galat render, bukan seperti lapisan. */
+.posbar{
+  position:sticky;z-index:30;top:calc(66px + env(safe-area-inset-top));
+  margin:-18px -14px 12px;padding:14px 14px 0;
+  background:var(--bg);
+}
+@media(min-width:900px){.posbar{position:static;margin:0 0 12px;padding:0;background:none}}
+.searchbar{position:relative;margin-bottom:11px}
 .searchbar svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--txt3)}
 .searchbar .input{padding-left:42px}
 .cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;-ms-overflow-style:none}
 .cats::-webkit-scrollbar{display:none}
+@media(min-width:1180px){.cats{display:none}}
 
-.pgrid{display:grid;gap:11px;grid-template-columns:repeat(2,1fr)}
+.pgrid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
 @media(min-width:560px){.pgrid{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:1080px){.pgrid{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:1320px){.pgrid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:900px){.pgrid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1240px){.pgrid{grid-template-columns:repeat(3,1fr)}}
 .pcard{
-  position:relative;display:flex;flex-direction:column;gap:3px;text-align:left;
-  padding:13px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);
+  position:relative;display:flex;flex-direction:column;gap:2px;text-align:left;
+  padding:10px 11px 13px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);
   transition:transform .12s ease,border-color .2s,background .2s;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
 }
-.pcard:active{transform:scale(.972)}
-.pcard.is-in{border-color:rgba(227,194,126,.42)}
-.pcard.is-out{opacity:.5}
+.pcard:active{transform:scale(.965)}
+/* Yang sudah masuk keranjang harus terbaca dari jauh, bukan cuma dari garis tepi.
+   Kasir memindai kisi ini sambil melayani orang — tidak sempat menatapnya. */
+.pcard.is-in{border-color:rgba(227,194,126,.5);background:linear-gradient(168deg,var(--goldsoft),var(--surface) 64%)}
+.pcard.is-out{opacity:.45}
+.pcard.is-out .pcard__ava{filter:grayscale(1)}
+/* Denyut sesudah diketuk: kartunya sendiri yang menjawab, jadi mata tidak perlu
+   pindah ke sudut layar dulu untuk tahu ketukannya kebaca. */
+.pcard.is-hit{animation:hit .5s ease-out}
+@keyframes hit{from{box-shadow:0 0 0 0 rgba(227,194,126,.5)}to{box-shadow:0 0 0 13px rgba(227,194,126,0)}}
 .pcard__ava{
-  width:100%;aspect-ratio:1.55/1;border-radius:11px;display:grid;place-items:center;
-  font-size:27px;margin-bottom:9px;
+  position:relative;width:100%;aspect-ratio:1.9/1;border-radius:12px;display:grid;place-items:center;
+  font-size:29px;margin-bottom:9px;
   background:hsl(var(--h) 42% 50% / .13);color:hsl(var(--h) 55% 66%);
   font-weight:800;letter-spacing:-.03em;
 }
 html[data-theme="light"] .pcard__ava{background:hsl(var(--h) 55% 46% / .12);color:hsl(var(--h) 48% 36%)}
-.pcard__n{font-size:13.2px;font-weight:640;line-height:1.32;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.64em}
-.pcard__c{font-size:10.5px;color:var(--txt3);font-weight:600;letter-spacing:.03em}
-.pcard__p{margin-top:5px;font-size:14px;font-weight:750;color:var(--gold);letter-spacing:-.02em}
-.pcard__s{font-size:10.5px;color:var(--txt3);margin-top:2px}
+.pcard__n{font-size:13.2px;font-weight:640;line-height:1.34;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.68em}
+.pcard__p{margin-top:5px;font-size:15px;font-weight:780;color:var(--gold);letter-spacing:-.03em}
+.pcard__c{font-size:10.4px;color:var(--txt3);font-weight:600;letter-spacing:.03em}
+/* Sisa stok ditempel di sudut gambar, bukan sebagai baris tersendiri: dia jarang
+   dibaca, tapi harus ada waktu dicari. Satu baris hemat ± 16px per kartu, dan
+   pada kisi 2 kolom itu setara satu baris kartu tambahan per layar. */
+.pcard__s{
+  position:absolute;left:7px;bottom:7px;font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:6px;background:rgba(10,12,15,.72);color:#C9D2DE;
+}
+html[data-theme="light"] .pcard__s{background:rgba(255,255,255,.86);color:#5A6472}
 .pcard__s.low{color:var(--warn)}
+.pcard__s.out{color:var(--danger)}
 .pcard__b{
-  position:absolute;top:9px;right:9px;min-width:24px;height:24px;padding:0 7px;border-radius:8px;
+  position:absolute;top:8px;right:8px;min-width:26px;height:26px;padding:0 8px;border-radius:9px;
   background:linear-gradient(150deg,var(--gold),var(--gold2));color:var(--ink);
-  display:grid;place-items:center;font-size:12px;font-weight:800;box-shadow:0 6px 14px -6px rgba(0,0,0,.6);
-  animation:pop .22s cubic-bezier(.2,1.4,.4,1);
+  display:grid;place-items:center;font-size:12.5px;font-weight:800;box-shadow:0 6px 14px -6px rgba(0,0,0,.6);
+  animation:pop .26s cubic-bezier(.2,1.5,.4,1);
 }
 @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
 
@@ -328,16 +389,16 @@ html[data-theme="light"] .pcard__ava{background:hsl(var(--h) 55% 46% / .12);colo
   padding-bottom:env(safe-area-inset-bottom);
 }
 .cart.open{transform:translateY(0)}
-@media(min-width:1080px){
-  .cart{position:sticky;top:92px;transform:none;border-radius:var(--r);max-height:calc(100dvh - 124px);z-index:1}
+@media(min-width:900px){
+  .cart{position:sticky;top:88px;transform:none;border-radius:var(--r);max-height:calc(100dvh - 120px);z-index:1}
 }
 .cart__grab{width:42px;height:4px;border-radius:9px;background:var(--line2);margin:9px auto 0}
-@media(min-width:1080px){.cart__grab{display:none}}
+@media(min-width:900px){.cart__grab{display:none}}
 .cart__head{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid var(--line)}
 .cart__head h3{font-size:16px;flex:1}
 .cart__count{font-size:11px;font-weight:750;color:var(--gold);background:var(--goldsoft);padding:4px 9px;border-radius:7px}
 .cart__body{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:6px 16px;min-height:110px}
-@media(min-width:1080px){.cart__body{max-height:44vh}}
+@media(min-width:900px){.cart__body{max-height:44vh}}
 
 .line{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid var(--line);align-items:flex-start}
 .line:last-child{border-bottom:0}
@@ -350,11 +411,14 @@ html[data-theme="light"] .line__ava{background:hsl(var(--h) 55% 46% / .12);color
 .line__calc b{color:var(--txt2);font-weight:700}
 .line__sub{font-size:14px;font-weight:750;text-align:right;letter-spacing:-.02em;white-space:nowrap}
 .line__right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:0 0 auto}
-.stepper{display:flex;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:2px}
-.stepper button{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--txt2);transition:.13s}
+/* Sasaran sentuh 34px. Tombol − dan + ini ditekan berulang-ulang dengan ibu jari
+   sambil tangan yang lain memegang barang; yang 30px sering meleset ke baris
+   sebelahnya, dan meleset di sini berarti jumlah barang salah. */
+.stepper{display:flex;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:2px}
+.stepper button{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--txt2);transition:.13s}
 .stepper button:active{background:var(--surface3);transform:scale(.9)}
-.stepper button svg{width:15px;height:15px}
-.stepper b{min-width:28px;text-align:center;font-size:13.5px;font-weight:750;font-variant-numeric:tabular-nums}
+.stepper button svg{width:16px;height:16px}
+.stepper b{min-width:30px;text-align:center;font-size:14px;font-weight:750;font-variant-numeric:tabular-nums}
 .stepper .del{color:var(--danger)}
 
 .cart__foot{padding:14px 16px 16px;border-top:1px solid var(--line);background:var(--surface2);border-radius:0 0 var(--r) var(--r)}
@@ -366,18 +430,68 @@ html[data-theme="light"] .line__ava{background:hsl(var(--h) 55% 46% / .12);color
 
 .cartbar{
   position:fixed;left:10px;right:10px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);z-index:44;
-  display:flex;align-items:center;gap:12px;padding:11px 12px 11px 16px;border-radius:15px;
+  display:flex;align-items:center;gap:11px;padding:10px 11px 10px 13px;border-radius:16px;
   background:linear-gradient(150deg,var(--surface3),var(--surface));border:1px solid var(--line2);
   box-shadow:var(--shadow);transform:translateY(150%);transition:transform .28s cubic-bezier(.2,.85,.25,1);
 }
 .cartbar.show{transform:translateY(0)}
-@media(min-width:1080px){.cartbar{display:none}}
+@media(min-width:900px){.cartbar{display:none}}
+/* Tumpukan ikon barang. Bar ini dulu cuma memuat angka total, jadi satu-satunya
+   cara memastikan isi keranjang adalah membukanya — padahal yang ingin dicek
+   kasir biasanya cuma "tadi jadi kemasukan belum". Ikonnya menjawab itu tanpa
+   ketukan. Ditumpuk bertindihan supaya lebarnya tetap walau isinya delapan. */
+.cartbar__av{display:flex;flex:0 0 auto;align-items:center}
+.cartbar__av span{
+  width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+  font-size:14px;font-weight:800;flex:0 0 auto;
+  background:hsl(var(--h) 42% 50% / .2);color:hsl(var(--h) 55% 70%);
+  border:1.5px solid var(--surface3);margin-left:-10px;
+}
+html[data-theme="light"] .cartbar__av span{background:hsl(var(--h) 55% 46% / .16);color:hsl(var(--h) 48% 34%)}
+.cartbar__av span:first-child{margin-left:0}
+.cartbar__av span.more{background:var(--surface2);color:var(--txt3);font-size:11px}
 .cartbar__i{flex:1;min-width:0}
-.cartbar__i span{display:block;font-size:10.5px;color:var(--txt3);font-weight:700;letter-spacing:.08em}
-.cartbar__i b{display:block;font-size:18px;letter-spacing:-.04em;margin-top:1px}
+.cartbar__i span{display:block;font-size:10.5px;color:var(--txt3);font-weight:700;letter-spacing:.07em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cartbar__i b{display:block;font-size:17.5px;letter-spacing:-.04em;margin-top:1px}
 .scrim{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.62);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s}
 .scrim.show{opacity:1;pointer-events:auto}
-@media(min-width:1080px){.scrim{display:none}}
+@media(min-width:900px){.scrim{display:none}}
+
+/* ---------- FLASH "MASUK KERANJANG" ---------- */
+/* Muncul tepat sesudah sebuah produk diketuk. Ini bukan hiasan: di meja kasir
+   yang ramai, ketukan sering meleset atau terhitung dua kali, dan kesalahannya
+   baru ketahuan waktu total sudah terlanjur dibacakan ke pembeli. Karena itu
+   yang ditampilkan bukan kata "berhasil", melainkan APA yang barusan masuk dan
+   jadi berapa — plus satu jalan keluar sekali ketuk kalau ternyata salah.
+   Diletakkan di atas cartbar, bukan menimpanya: keduanya sering tampil bersama. */
+.flash{
+  position:fixed;z-index:70;left:10px;right:10px;
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 74px);
+  display:flex;align-items:center;gap:11px;padding:9px 9px 9px 12px;border-radius:15px;
+  background:var(--surface3);border:1px solid rgba(227,194,126,.34);box-shadow:var(--shadow);
+  opacity:0;transform:translateY(14px) scale(.97);pointer-events:none;
+  transition:opacity .18s,transform .26s cubic-bezier(.2,1.3,.35,1);
+}
+.flash.show{opacity:1;transform:none;pointer-events:auto}
+/* Di layar lebar keranjang sudah kelihatan di kolom kanan, jadi flash-nya
+   dipindah ke kiri bawah supaya tidak menutupi baris yang baru saja berubah. */
+@media(min-width:900px){.flash{left:22px;right:auto;bottom:22px;width:min(340px,calc(100vw - 44px))}}
+.flash__ava{
+  width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+  font-size:19px;font-weight:800;flex:0 0 auto;
+  background:hsl(var(--h) 42% 50% / .18);color:hsl(var(--h) 55% 68%);
+}
+html[data-theme="light"] .flash__ava{background:hsl(var(--h) 55% 46% / .14);color:hsl(var(--h) 48% 36%)}
+.flash.show .flash__ava{animation:pop .3s cubic-bezier(.2,1.5,.4,1)}
+.flash__b{flex:1;min-width:0}
+.flash__b b{display:block;font-size:13.4px;font-weight:660;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flash__b em{display:block;font-style:normal;font-size:11.8px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flash__b em i{font-style:normal;color:var(--gold);font-weight:750}
+.flash__u{
+  flex:0 0 auto;height:36px;padding:0 13px;border-radius:10px;font-size:12.5px;font-weight:700;
+  background:var(--surface);border:1px solid var(--line2);color:var(--txt2);transition:.13s;
+}
+.flash__u:active{transform:scale(.93);color:var(--danger)}
 
 /* ============================== SHEET / MODAL ============================== */
 .sheet{position:fixed;inset:0;z-index:90;display:none}
@@ -468,7 +582,7 @@ html[data-theme="light"] .line__ava{background:hsl(var(--h) 55% 46% / .12);color
 
 /* ============================== LISTS (produk/riwayat) ============================== */
 .list{display:flex;flex-direction:column;gap:9px;padding-bottom:78px}
-@media(min-width:1080px){.list{padding-bottom:16px}}
+@media(min-width:900px){.list{padding-bottom:16px}}
 .item{
   display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;
   background:var(--surface);border:1px solid var(--line);
@@ -508,7 +622,7 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
 }
 .fab:active{transform:scale(.95)}
 .fab svg{width:19px;height:19px}
-@media(min-width:1080px){.fab{bottom:24px;right:24px}}
+@media(min-width:900px){.fab{bottom:24px;right:24px}}
 
 .setgroup{margin-bottom:18px}
 .setgroup>h4{font-size:11.5px;font-weight:750;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3);margin-bottom:10px}
@@ -524,8 +638,8 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
 .switch.on::after{transform:translateX(20px);background:var(--gold)}
 
 /* ============================== TOAST & DIALOG ============================== */
-.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 86px);z-index:120;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:max-content;max-width:92vw}
-@media(min-width:1080px){.toasts{bottom:28px}}
+.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 138px);z-index:120;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:max-content;max-width:92vw}
+@media(min-width:900px){.toasts{bottom:28px}}
 .toast{
   display:flex;align-items:center;gap:9px;padding:11px 16px;border-radius:13px;
   background:var(--surface3);border:1px solid var(--line2);box-shadow:var(--shadow);
@@ -536,6 +650,112 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
 @keyframes tout{to{opacity:0;transform:translateY(10px) scale(.97)}}
 .toast svg{width:17px;height:17px;flex:0 0 auto}
 .toast.ok svg{color:var(--ok)} .toast.err svg{color:var(--danger)} .toast.info svg{color:var(--gold)}
+
+/* ============================== DATA / SQL ============================== */
+.sqlwrap{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+@media(min-width:1080px){.sqlwrap{grid-template-columns:minmax(0,1fr) 268px}}
+.sqlwrap>*{min-width:0}
+
+.sqlbox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+#sqlKueri{
+  border:0;border-radius:0;background:transparent;min-height:132px;resize:vertical;
+  font-family:ui-monospace,"SF Mono",Consolas,"Liberation Mono",monospace;
+  font-size:13px;line-height:1.62;tab-size:2;
+}
+#sqlKueri:focus{box-shadow:none}
+.sqlbar{display:flex;align-items:center;gap:9px;padding:10px 12px;border-top:1px solid var(--line);background:var(--surface2)}
+.sqlhint{font-size:11.5px;color:var(--txt3);margin-left:auto;text-align:right}
+
+/* Palang penegasan sebelum menulis. Sengaja berwarna bahaya dan sengaja
+   memuat ANGKA barisnya: "3 baris" dan "1.284 baris" harus terasa berbeda
+   sebelum jari menekan, karena sesudahnya tidak ada yang bisa ditarik. */
+.sqlconf{
+  display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+  margin-top:12px;padding:13px 14px;border-radius:var(--rs);
+  background:var(--dangersoft);border:1px solid rgba(251,113,133,.42);
+}
+.sqlconf__b{flex:1;min-width:180px}
+.sqlconf__b b{display:block;font-size:14px;color:var(--danger)}
+.sqlconf__b span{display:block;font-size:12.4px;color:var(--txt2);margin-top:3px;line-height:1.5}
+
+.sqlgalat{
+  margin-top:12px;padding:12px 14px;border-radius:var(--rs);
+  background:var(--dangersoft);border:1px solid rgba(251,113,133,.34);
+  color:var(--danger);font-size:12.8px;line-height:1.6;
+  font-family:ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word;
+}
+.sqlmeta{margin-top:12px;font-size:12.2px;color:var(--txt3);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sqlmeta b{color:var(--txt2);font-weight:700}
+.sqlmeta .tag{background:var(--surface2);border:1px solid var(--line);padding:3px 8px;border-radius:7px;font-weight:650}
+.sqlmeta .tag.ok{color:var(--ok);background:var(--oksoft);border-color:rgba(74,222,128,.3)}
+.sqlmeta .tag.pot{color:var(--warn)}
+
+/* Tabel hasil digulung di dalam kotaknya sendiri. Kueri bisa mengembalikan 30
+   kolom, dan halaman yang ikut melebar ke samping membuat seluruh aplikasi
+   terasa rusak — bukan cuma tabelnya. */
+.sqlhasil{margin-top:12px;overflow-x:auto;border-radius:var(--r)}
+.sqlhasil table{border-collapse:collapse;width:100%;font-size:12.6px;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.sqlhasil th,.sqlhasil td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.sqlhasil th{background:var(--surface2);font-weight:750;font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--txt3);position:sticky;top:0}
+.sqlhasil tr:last-child td{border-bottom:0}
+.sqlhasil td{font-family:ui-monospace,Consolas,monospace;color:var(--txt2)}
+.sqlhasil td.num{text-align:right;font-variant-numeric:tabular-nums;color:var(--txt)}
+.sqlhasil td.nil{color:var(--txt3);font-style:italic}
+.sqlhasil .kosong{padding:26px;text-align:center;color:var(--txt3);font-size:13px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+
+.sqlsisi__k{font-size:11px;font-weight:750;letter-spacing:.13em;text-transform:uppercase;color:var(--txt3);margin-bottom:9px}
+.sqlcontoh{display:flex;flex-direction:column;gap:6px}
+.sqlcontoh button{
+  text-align:left;padding:10px 12px;border-radius:var(--rs);
+  background:var(--surface);border:1px solid var(--line);transition:.14s;
+}
+.sqlcontoh button:hover{border-color:var(--line2);background:var(--surface2)}
+.sqlcontoh button b{display:block;font-size:12.8px;font-weight:640}
+.sqlcontoh button span{display:block;font-size:11px;color:var(--txt3);margin-top:3px;
+  font-family:ui-monospace,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sqlcontoh button.tulis b::after{content:'ubah data';float:right;font-size:9.5px;font-weight:750;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--warn);background:rgba(251,191,36,.14);
+  padding:2px 6px;border-radius:5px;margin-left:8px}
+
+.sqljejak{display:flex;flex-direction:column;gap:5px}
+.sqljejak button{
+  text-align:left;padding:8px 11px;border-radius:var(--rs);background:var(--surface);
+  border:1px solid var(--line);font-family:ui-monospace,Consolas,monospace;font-size:11px;
+  color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.14s;
+}
+.sqljejak button:hover{color:var(--txt2);border-color:var(--line2)}
+.sqljejak button.gagal{color:var(--danger);opacity:.75}
+
+/* Daftar tabel di lembar bantuan. */
+.skematbl{margin-bottom:16px}
+.skematbl:last-child{margin-bottom:0}
+.skematbl__n{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.skematbl__n b{font-size:14px;font-family:ui-monospace,Consolas,monospace;color:var(--gold)}
+.skematbl__n i{font-style:normal;font-size:10px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--txt3);background:var(--surface2);border:1px solid var(--line);padding:2px 7px;border-radius:6px}
+.skemakol{display:flex;flex-wrap:wrap;gap:5px}
+.skemakol button{
+  padding:5px 9px;border-radius:7px;background:var(--surface2);border:1px solid var(--line);
+  font-family:ui-monospace,Consolas,monospace;font-size:11.5px;color:var(--txt2);transition:.13s;
+}
+.skemakol button:hover{border-color:var(--gold2);color:var(--gold)}
+.skemakol button u{text-decoration:none;color:var(--txt3);margin-left:5px;font-size:10px}
+
+/* Lencana mode di topbar — supaya tidak pernah ada keraguan data ini tersimpan
+   di HP ini saja atau di peladen yang dipakai bersama. */
+/* Selektornya sengaja dua kelas. Aturan .topbar__store span{display:block} di
+   bagian APP SHELL berlaku juga untuk lencana ini karena dia memang sebuah span
+   di dalam .topbar__store, dan kekhususannya (0,1,1) mengalahkan .modetag
+   sendirian (0,1,0) — lencananya jadi blok selebar induknya. */
+.topbar__store .modetag{
+  display:inline-block;
+  font-size:9.5px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 7px;border-radius:6px;margin-left:7px;vertical-align:2px;
+  background:var(--goldsoft);color:var(--gold);border:1px solid rgba(227,194,126,.3);
+}
 
 /* ============================== PRINT ============================== */
 @media print{
@@ -686,6 +906,7 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
       <button data-nav="kasir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="3"/><path d="M6 12h.01M18 12h.01"/><circle cx="12" cy="12" r="2.5"/></svg>Kasir</button>
       <button data-nav="produk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg>Produk</button>
       <button data-nav="riwayat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Riwayat</button>
+      <button data-nav="data" class="hanya-server" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Data</button>
       <button data-nav="atur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-2.87 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 2.6 15a1.7 1.7 0 0 0-1.6-1H1a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 2.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 7 4.6h.09A1.7 1.7 0 0 0 8 3V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.09a1.7 1.7 0 0 0 1.6 1.01H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>Atur</button>
     </nav>
     <button class="iconbtn" id="themeBtn" title="Ganti tema"></button>
@@ -696,12 +917,15 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
     <!-- ── KASIR ── -->
     <section class="view" id="view-kasir">
       <div class="pos">
+        <aside class="rail" id="rail"></aside>
         <div>
-          <div class="searchbar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
-            <input class="input" id="q" type="search" placeholder="Cari barang…" autocomplete="off">
+          <div class="posbar">
+            <div class="searchbar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+              <input class="input" id="q" type="search" placeholder="Cari barang…" autocomplete="off">
+            </div>
+            <div class="cats" id="cats"></div>
           </div>
-          <div class="cats" id="cats"></div>
           <div class="pgrid" id="pgrid"></div>
         </div>
 
@@ -727,8 +951,9 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
 
       <div class="scrim" id="cartScrim"></div>
       <button class="cartbar" id="cartBar">
+        <span class="cartbar__av" id="cbAv"></span>
         <span class="cartbar__i" style="text-align:left"><span id="cbCount">0 item · 0 pcs</span><b class="money" id="cbTotal">Rp 0,00</b></span>
-        <span class="btn btn--gold" style="pointer-events:none">Lihat Keranjang</span>
+        <span class="btn btn--gold" style="pointer-events:none;flex:0 0 auto">Lihat</span>
       </button>
     </section>
 
@@ -796,6 +1021,7 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
           <div class="togrow"><div class="togrow__b"><b>Cadangan lewat teks</b><span>Cara paling aman di HP — salin lalu kirim ke WhatsApp sendiri</span></div>
             <div style="display:flex;gap:6px;flex:0 0 auto"><button class="btn" id="btnCopyBk">Salin</button><button class="btn" id="btnPasteBk">Tempel</button></div>
           </div>
+          <div class="togrow" id="rowBak" hidden><div class="togrow__b"><b>Salinan sebelum pemutakhiran</b><span id="bakInfo">—</span></div><button class="btn" id="btnBak">Unduh</button></div>
           <div class="togrow"><div class="togrow__b"><b>Hapus semua data</b><span>Produk, riwayat, dan pengaturan</span></div><button class="btn btn--danger" id="btnReset">Reset</button></div>
         </div>
         <p class="hint" id="storageWarn" hidden></p>
@@ -813,12 +1039,62 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
       <input type="file" id="fileImport" accept="application/json,.json" hidden>
     </section>
 
+    <!-- ── DATA (SQL) ── -->
+    <section class="view" id="view-data" hidden>
+      <div class="vhead">
+        <div><h2>Olah Data</h2><p id="dtSub">Jalankan SQL langsung ke basis data toko</p></div>
+        <button class="btn" id="btnSkema" title="Lihat daftar tabel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>Tabel
+        </button>
+      </div>
+
+      <div class="sqlwrap">
+        <div class="sqlmain">
+          <div class="sqlbox">
+            <textarea id="sqlKueri" class="input" spellcheck="false" autocapitalize="off" autocomplete="off"
+              placeholder="SELECT nama, harga, stok FROM produk ORDER BY harga DESC"></textarea>
+            <div class="sqlbar">
+              <button class="btn btn--gold" id="btnJalan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8V4z"/></svg>
+                <span id="lblJalan">Jalankan</span>
+              </button>
+              <button class="mini" id="btnBersih" title="Kosongkan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+              <span class="sqlhint" id="sqlHint">Ctrl+Enter untuk menjalankan</span>
+            </div>
+          </div>
+
+          <!-- Palang penegasan: hanya muncul sesudah pratinjau, dan hanya untuk
+               kueri yang mengubah data. -->
+          <div class="sqlconf" id="sqlConf" hidden>
+            <div class="sqlconf__b">
+              <b id="confJudul">—</b>
+              <span id="confPesan">—</span>
+            </div>
+            <button class="btn" id="btnBatalTulis">Batal</button>
+            <button class="btn btn--danger" id="btnSimpanTulis">Ya, simpan</button>
+          </div>
+
+          <div class="sqlgalat" id="sqlGalat" hidden></div>
+          <div class="sqlmeta" id="sqlMeta" hidden></div>
+          <div class="sqlhasil" id="sqlHasil"></div>
+        </div>
+
+        <aside class="sqlsisi">
+          <div class="sqlsisi__k">Contoh yang sering dipakai</div>
+          <div class="sqlcontoh" id="sqlContoh"></div>
+          <div class="sqlsisi__k" style="margin-top:18px">Kueri terakhir</div>
+          <div class="sqljejak" id="sqlJejak"></div>
+        </aside>
+      </div>
+    </section>
+
   </main>
 
   <nav class="bottomnav" id="bnav">
     <button data-nav="kasir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="3"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>Kasir</button>
     <button data-nav="produk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg>Produk</button>
     <button data-nav="riwayat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Riwayat</button>
+    <button data-nav="data" class="hanya-server" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Data</button>
     <button data-nav="atur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>Atur</button>
   </nav>
 </div>
@@ -911,6 +1187,39 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
   </div>
 </div>
 
+<!-- ══════════════════════════ SHEET: DAFTAR TABEL ══════════════════════════ -->
+<div class="sheet" id="skemaSheet">
+  <div class="sheet__scrim" data-close></div>
+  <div class="sheet__panel">
+    <div class="sheet__grab"></div>
+    <div class="sheet__head">
+      <div style="flex:1"><h3>Tabel &amp; Kolom</h3><p>Ketuk nama untuk menyalinnya ke kotak kueri</p></div>
+      <button class="mini" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="sheet__body"><div id="skemaIsi"></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ SHEET: MASUK ══════════════════════════ -->
+<div class="sheet" id="masukSheet">
+  <div class="sheet__scrim"></div>
+  <div class="sheet__panel">
+    <div class="sheet__head">
+      <div style="flex:1"><h3>Masuk</h3><p id="masukSub">Kasir ini tersambung ke peladen</p></div>
+    </div>
+    <div class="sheet__body">
+      <label class="field" style="margin-bottom:0">
+        <span class="field__lbl">Kata Sandi Toko</span>
+        <input class="input" id="masukSandi" type="password" autocomplete="current-password" placeholder="••••••••">
+      </label>
+      <p class="hint" id="masukGalat" hidden style="color:var(--danger)"></p>
+    </div>
+    <div class="sheet__foot">
+      <button class="btn btn--gold btn--lg" id="btnMasuk" style="flex:1">Masuk</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════ DIALOG KONFIRMASI ══════════════════════════ -->
 <div class="sheet" id="confirmSheet">
   <div class="sheet__scrim" data-close></div>
@@ -947,6 +1256,13 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
   </div>
 </div>
 
+<!-- ══════════════════════════ FLASH: MASUK KERANJANG ══════════════════════════ -->
+<div class="flash" id="flash" role="status" aria-live="polite">
+  <span class="flash__ava" id="flAva"></span>
+  <span class="flash__b"><b id="flName">—</b><em id="flMeta">—</em></span>
+  <button class="flash__u" id="flUndo">Urungkan</button>
+</div>
+
 <div class="toasts" id="toasts"></div>
 
 <script>
@@ -962,6 +1278,18 @@ function bridge(){ try{ return window.AndroidBridge || null; }catch(e){ return n
 function round2(n){ n = Number(n)||0; return Math.round((n + Number.EPSILON) * 100) / 100; }
 function uid(){ return 'p' + Math.random().toString(36).slice(2,9) + (idSeed++); }
 var idSeed = 0;
+
+/* Sesudah migrasi v2, "stok tak dibatasi" cuma punya satu bentuk: null. Kedua
+   helper ini tetap memaklumi bentuk lama ('' dan undefined) karena berkas
+   cadangan lawas bisa dipulihkan kapan saja, bahkan yang disunting tangan. */
+function stokBebas(p){ return !p || p.stock === '' || p.stock == null || !isFinite(Number(p.stock)); }
+function stokAda(p){ return stokBebas(p) ? Infinity : Math.max(0, Number(p.stock) || 0); }
+
+/* Getar pendek sebagai tanda ketukan terbaca. Di HP Android murah, jeda gambar
+   bisa 100 ms lebih dan kasir sudah terlanjur mengetuk dua kali; getarnya sampai
+   duluan. Dibungkus try — sebagian WebView punya nama fungsinya tapi melemparkan
+   galat waktu dipanggil dari konteks tanpa izin. */
+function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 
 function decimals(){ return S.settings.decimals ? 2 : 0; }
 function num(n){
@@ -998,8 +1326,15 @@ function dstamp(ts){ var d = new Date(ts); return pad(d.getDate())+'/'+pad(d.get
 function daykey(ts){ var d = new Date(ts); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 
 /* ============================== STATE ============================== */
-var LS = 'kasirluxe.v1';
+/* Kunci ini TIDAK PERNAH berubah. Data toko yang sudah ada di HP pemakai
+   tersimpan di situ, dan mengganti namanya sama saja dengan menghapusnya —
+   tanpa galat, tanpa peringatan, cuma "kok produknya balik ke contoh semua".
+   Yang naik versi adalah SCHEMA di dalam isinya, bukan nama kuncinya. */
+var LS  = 'kasirluxe.v1';
+var LSB = 'kasirluxe.v1.bak';   // salinan mentah sebelum migrasi terakhir
+var SCHEMA = 2;
 var storageOK = true;
+var bootNote = '';              // keluhan migrasi, ditampilkan sesudah boot
 
 var DEFAULTS = {
   store:'Toko Berkah Jaya',
@@ -1029,34 +1364,366 @@ function seedProducts(){
   });
 }
 
-var S = { products:[], cart:[], trx:[], settings:{}, ui:{ view:'kasir', q:'', qp:'', cat:'Semua', editing:null, payStr:'0' } };
+var S = { schema:SCHEMA, products:[], cart:[], trx:[], settings:{}, ui:{ view:'kasir', q:'', qp:'', cat:'Semua', editing:null, payStr:'0' } };
+
+/* ============================== MIGRASI DATA ==============================
+   Aplikasi ini satu berkas yang ditimpa utuh waktu diperbarui: pemakai menyalin
+   HTML baru ke HP-nya, membukanya, dan detik itu juga kode baru membaca data
+   lama yang sudah ada di localStorage. Tidak ada server yang sempat merapikan
+   datanya lebih dulu, dan tidak ada tombol "batal" — begitu tersimpan, bentuk
+   lamanya hilang. Jadi kode baru WAJIB bisa membaca bentuk lama dan mengubahnya
+   sendiri saat dibuka.
+
+   Aturan mainnya:
+   - satu langkah per kenaikan versi, maju saja, tidak pernah mundur;
+   - jangan buang kolom yang tidak dikenali — versi lebih baru menaruh sesuatu
+     di situ, dan pemakai yang sempat membuka versi lama tidak boleh kehilangan;
+   - selalu sisakan salinan mentah sebelum langkah pertama dijalankan. */
+var MIGRATIONS = {
+  /* v1 -> v2
+     v1 menandai "stok tak dibatasi" dengan tiga bentuk berbeda: '', null, dan
+     kolomnya tidak ada sama sekali. Akibatnya tiap pembacaan stok harus mengecek
+     ketiganya, dan satu pengecekan yang terlewat membuat barang tanpa batas stok
+     dianggap habis — barangnya jadi tidak bisa dijual, dan sebabnya tidak
+     kelihatan dari layar mana pun. Diseragamkan ke null. */
+  2: function(d){
+    d.products = (Array.isArray(d.products) ? d.products : []).map(function(p){
+      p = (p && typeof p === 'object') ? p : {};
+      var st = p.stock;
+      var bebas = (st === '' || st == null || !isFinite(Number(st)));
+      // Object.assign menyalin dulu supaya kolom asing milik versi lain ikut lestari.
+      return Object.assign({}, p, {
+        id:    p.id || uid(),
+        name:  String(p.name == null ? '' : p.name).trim(),
+        cat:   String(p.cat || 'Lainnya').trim() || 'Lainnya',
+        emoji: String(p.emoji || ''),
+        price: round2(Number(p.price) || 0),
+        stock: bebas ? null : Math.max(0, Math.round(Number(st)))
+      });
+    }).filter(function(p){ return p.name !== ''; });
+    return d;
+  }
+};
+
+function snapshot(raw){
+  /* Bentuk mentah sebelum migrasi. Kalau langkah migrasinya ternyata keliru,
+     ini satu-satunya jalan pulang: tidak ada server, tidak ada riwayat versi. */
+  if(!raw) return;
+  try{ localStorage.setItem(LSB, raw); }catch(e){}
+}
+
+function migrate(d){
+  var from = Number(d.schema || d.v || 1) || 1;
+  if(from > SCHEMA){
+    /* Data dari versi yang lebih baru — biasanya cadangan dari HP yang sudah
+       diperbarui, dipulihkan ke HP yang belum. Jangan dipaksa turun versi:
+       menuliskannya kembali lewat kode lama akan memangkas kolom yang belum
+       dikenal di sini. Dipakai apa adanya, pemakainya diberi tahu. */
+    bootNote = 'Data ini dibuat versi aplikasi yang lebih baru. Perbarui aplikasinya supaya tidak ada yang terpangkas.';
+    return d;
+  }
+  for(var v = from + 1; v <= SCHEMA; v++){
+    if(!MIGRATIONS[v]) continue;
+    try{ d = MIGRATIONS[v](d) || d; }
+    catch(e){
+      bootNote = 'Sebagian data lama gagal disesuaikan (langkah v' + v + '). Salinan sebelum pemutakhiran masih tersimpan di menu Atur.';
+      break;
+    }
+  }
+  d.schema = SCHEMA;
+  return d;
+}
+
+/* Menerima sebongkah data (dari localStorage atau dari berkas cadangan) menjadi
+   keadaan aplikasi. Normalisasi ringan di sini disengaja rangkap dengan migrasi:
+   berkas cadangan bisa saja disunting tangan sebelum dipulihkan. */
+function adopt(d){
+  S.schema   = Number(d.schema) || SCHEMA;
+  S.products = Array.isArray(d.products) ? d.products : seedProducts();
+  S.trx      = Array.isArray(d.trx) ? d.trx : [];
+  S.settings = Object.assign({}, DEFAULTS, d.settings || {});
+  S.cart     = [];
+  S.products.forEach(function(p){
+    if(!p.id) p.id = uid();
+    p.price = round2(Number(p.price) || 0);
+    if(p.stock === '' || p.stock == null || !isFinite(Number(p.stock))) p.stock = null;
+  });
+}
 
 function load(){
   var raw = null;
   try{ raw = localStorage.getItem(LS); }
   catch(e){ storageOK = false; }
+
   var data = null;
   if(raw){ try{ data = JSON.parse(raw); }catch(e){ data = null; } }
-  if(data && typeof data === 'object'){
-    S.products = Array.isArray(data.products) ? data.products : seedProducts();
-    S.trx      = Array.isArray(data.trx) ? data.trx : [];
-    S.settings = Object.assign({}, DEFAULTS, data.settings || {});
-  }else{
-    S.products = seedProducts();
-    S.trx = [];
+
+  if(!data || typeof data !== 'object'){
+    /* Kosong, atau ada tapi tidak terbaca. Yang kedua tidak boleh ditimpa
+       diam-diam — simpan apa adanya dulu, siapa tahu masih bisa diselamatkan
+       dengan tangan lewat Unduh di menu Atur. */
+    if(raw){
+      snapshot(raw);
+      bootNote = 'Data tersimpan tidak terbaca, jadi aplikasi dimulai dari contoh. Salinan aslinya bisa diunduh di menu Atur.';
+    }
+    S.schema = SCHEMA; S.products = seedProducts(); S.trx = []; S.cart = [];
     S.settings = Object.assign({}, DEFAULTS);
+    return;
   }
-  S.products.forEach(function(p){ if(!p.id) p.id = uid(); p.price = Number(p.price)||0; });
+
+  var from = Number(data.schema || data.v || 1) || 1;
+  if(from < SCHEMA) snapshot(raw);   // hanya saat migrasi benar-benar jalan
+  adopt(migrate(data));
+
+  /* Hasilnya langsung ditulis balik, sekali, di sini. Kalau ditunda sampai
+     pemakai kebetulan mengubah sesuatu, data lama akan dimigrasi ulang setiap
+     kali aplikasi dibuka — dan karena snapshot() ikut jalan tiap kali, jaring
+     pengamannya tidak pernah benar-benar merekam satu titik waktu: dia terus
+     bergeser mengikuti pembukaan terakhir. Kasir yang cuma membuka aplikasi
+     lalu menutupnya lagi juga akan tetap menyimpan bentuk lama selamanya. */
+  if(from < SCHEMA) save();
 }
+
 function save(){
   if(!storageOK) return;
   try{
-    localStorage.setItem(LS, JSON.stringify({ products:S.products, trx:S.trx, settings:S.settings }));
+    localStorage.setItem(LS, JSON.stringify({
+      schema:S.schema, products:S.products, trx:S.trx, settings:S.settings
+    }));
   }catch(e){
     storageOK = false;
     toast('Penyimpanan browser diblokir — data tidak tersimpan permanen.','err');
   }
 }
+
+/* ══════════════════════════ GUDANG — LAPISAN DATA ══════════════════════════
+   Satu antarmuka, dua punggung:
+
+     lokal   localStorage. Persis seperti sebelumnya — tanpa peladen, tanpa
+             akun, jalan penuh waktu sinyal mati.
+     server  Postgres lewat /api. Datanya bisa dibuka dari HP mana pun, dan
+             menu Data bisa mengolahnya dengan SQL.
+
+   Modenya TIDAK disetel tangan, melainkan disimpulkan dari cara halaman ini
+   dibuka. Alasannya: APK memuat berkas yang sama dari file:///android_asset/,
+   dan di sana tidak ada peladen yang bisa dihubungi. Kalau modenya berupa
+   setelan, cepat atau lambat ada yang menyalakan mode server di HP lalu
+   membawanya ke tempat tanpa sinyal — dan kasirnya berhenti jualan justru di
+   saat paling ramai. Dibaca dari protokol, kekeliruan itu tidak bisa terjadi.
+
+   Semua metode mengembalikan Promise di KEDUA mode, walau yang lokal sebenarnya
+   selesai seketika. Kalau bentuknya dibedakan, tiap pemanggil harus tahu sedang
+   di mode apa, dan cabang yang jarang jalan itu yang akan busuk diam-diam. */
+var Gudang = (function(){
+
+  var mode = 'lokal';
+
+  /* ── PENERJEMAH ────────────────────────────────────────────────────────
+     Peladen berbahasa Indonesia (produk.nama, produk.harga), keadaan di layar
+     memakai nama lama (p.name, p.price). Diterjemahkan di perbatasan saja,
+     supaya seluruh kode penggambar tidak perlu ikut berubah — dan supaya
+     mengganti punggung tidak berarti menyentuh 40 tempat penggambaran. */
+  function dariProduk(p){
+    return { id:p.id, name:p.nama, cat:p.kategori, price:Number(p.harga),
+             stock:(p.stok == null ? null : Number(p.stok)), emoji:p.ikon || '' };
+  }
+  function keProduk(p){
+    return { nama:p.name, kategori:p.cat, harga:p.price,
+             stok:(p.stock == null || p.stock === '' ? null : p.stock), ikon:p.emoji || '' };
+  }
+  function dariTrx(t){
+    return {
+      id:t.id, no:t.nomor, ts:new Date(t.waktu).getTime(),
+      items:(t.item || []).map(function(i){
+        return { name:i.nama, emoji:i.ikon || '', price:Number(i.harga),
+                 qty:Number(i.jumlah), sub:Number(i.subtotal) };
+      }),
+      lines:Number(t.jenis_item), qty:Number(t.total_pcs), total:Number(t.total),
+      pay:Number(t.bayar), change:Number(t.kembali),
+      store:t.toko_nama, addr:t.toko_alamat, note:t.toko_catatan,
+      cur:t.mata_uang, dec:t.dua_desimal
+    };
+  }
+  function dariToko(t){
+    return { store:t.nama, addr:t.alamat, note:t.catatan_struk,
+             currency:t.mata_uang, decimals:t.dua_desimal, theme:t.tema };
+  }
+
+  /* ── PEMANGGIL API ─────────────────────────────────────────────────────── */
+  function api(jalur, opsi){
+    opsi = opsi || {};
+    return fetch('/api' + jalur, {
+      method: opsi.method || 'GET',
+      headers: opsi.body ? { 'Content-Type':'application/json' } : undefined,
+      body: opsi.body ? JSON.stringify(opsi.body) : undefined,
+      credentials: 'same-origin'
+    }).then(function(res){
+      return res.json().catch(function(){ return {}; }).then(function(isi){
+        if(res.status === 401){ var e = new Error('Sesi habis — masuk lagi.'); e.perluMasuk = true; throw e; }
+        if(!res.ok) throw new Error(isi && isi.galat ? isi.galat : ('Peladen menolak (' + res.status + ')'));
+        return isi;
+      });
+    });
+  }
+
+  /* Pengaturan yang tetap milik perangkat ini sendiri walau datanya di peladen:
+     mau atau tidaknya halaman depan muncul adalah kebiasaan orang yang memegang
+     HP-nya, bukan sifat toko. Kasir di belakang meja tidak mau melihatnya,
+     pemilik yang membuka dari laptop mungkin mau. */
+  function muatUiLokal(){
+    try{
+      var u = JSON.parse(localStorage.getItem(LS + '.ui') || '{}');
+      if(typeof u.landing === 'boolean') S.settings.landing = u.landing;
+    }catch(e){}
+  }
+  function simpanUiLokal(){
+    try{ localStorage.setItem(LS + '.ui', JSON.stringify({ landing: !!S.settings.landing })); }catch(e){}
+  }
+
+  return {
+    get mode(){ return mode; },
+    diServer: function(){ return mode === 'server'; },
+    api: api,
+
+    /* Menebak mode sekali di awal. file:// tidak pernah punya peladen, jadi
+       tidak perlu dicoba sama sekali — mencobanya cuma menunda pembukaan
+       aplikasi beberapa detik di HP yang paling butuh cepat. */
+    kenali: function(){
+      var p = location.protocol;
+      if(p !== 'http:' && p !== 'https:'){ mode = 'lokal'; return Promise.resolve('lokal'); }
+      return fetch('/api/keadaan', { credentials:'same-origin' })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(j){
+          if(j && typeof j.masuk === 'boolean'){ mode = 'server'; return { mode:'server', keadaan:j }; }
+          mode = 'lokal'; return { mode:'lokal' };
+        })
+        .catch(function(){ mode = 'lokal'; return { mode:'lokal' }; });
+    },
+
+    masuk: function(sandi){
+      return api('/masuk', { method:'POST', body:{ sandi:sandi } });
+    },
+    keluar: function(){ return api('/keluar', { method:'POST' }); },
+
+    muat: function(){
+      if(mode === 'lokal'){ load(); return Promise.resolve(); }
+      return api('/semua').then(function(d){
+        S.schema   = SCHEMA;
+        S.products = d.produk.map(dariProduk);
+        S.trx      = d.transaksi.map(dariTrx);
+        S.settings = Object.assign({}, DEFAULTS, dariToko(d.toko));
+        S.cart     = [];
+        muatUiLokal();
+      });
+    },
+
+    simpanProduk: function(data, id){
+      if(mode === 'lokal'){
+        if(id){
+          var p = S.products.filter(function(x){ return x.id === id; })[0];
+          if(p) Object.assign(p, data);
+        }else{
+          S.products.unshift(Object.assign({ id:uid() }, data));
+        }
+        save(); return Promise.resolve();
+      }
+      return api(id ? '/produk/' + encodeURIComponent(id) : '/produk',
+                 { method: id ? 'PUT' : 'POST', body: keProduk(data) })
+        .then(function(p){
+          var baru = dariProduk(p);
+          if(id){
+            var lama = S.products.filter(function(x){ return x.id === id; })[0];
+            if(lama) Object.assign(lama, baru);
+          }else{
+            S.products.unshift(baru);
+          }
+        });
+    },
+
+    hapusProduk: function(id){
+      function buang(){
+        S.products = S.products.filter(function(x){ return x.id !== id; });
+        S.cart     = S.cart.filter(function(x){ return x.id !== id; });
+      }
+      if(mode === 'lokal'){ buang(); save(); return Promise.resolve(); }
+      return api('/produk/' + encodeURIComponent(id), { method:'DELETE' }).then(buang);
+    },
+
+    tambahContoh: function(){
+      var contoh = seedProducts();
+      if(mode === 'lokal'){ S.products = contoh.concat(S.products); save(); return Promise.resolve(contoh.length); }
+      return api('/produk/contoh', { method:'POST', body:{ daftar: contoh.map(keProduk) } })
+        .then(function(d){
+          S.products = d.produk.map(dariProduk).concat(S.products);
+          return d.produk.length;
+        });
+    },
+
+    /* Menyelesaikan transaksi. Di mode server seluruh perhitungan diulang di
+       sisi peladen — angka dari peramban tidak dipercaya, dan stok dikurangi di
+       transaksi basis data yang sama supaya dua kasir yang menjual barang
+       terakhir pada detik yang sama tidak dua-duanya berhasil. */
+    selesaikan: function(bayar){
+      var t = totals();
+      if(mode === 'lokal'){
+        var today = daykey(Date.now());
+        var seq = S.trx.filter(function(x){ return daykey(x.ts) === today; }).length + 1;
+        var d = new Date();
+        var trx = {
+          id: 't' + Date.now() + Math.floor(Math.random()*1000),
+          no: 'TRX-' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '-' + ('00' + seq).slice(-3),
+          ts: Date.now(),
+          items: S.cart.map(function(l){ return { name:l.name, emoji:l.emoji, price:l.price, qty:l.qty, sub:round2(l.price * l.qty) }; }),
+          lines: t.lines, qty: t.qty, total: t.total,
+          pay: round2(bayar), change: round2(bayar - t.total),
+          store: S.settings.store, addr: S.settings.addr, note: S.settings.note,
+          cur: S.settings.currency, dec: S.settings.decimals
+        };
+        S.cart.forEach(function(l){
+          var p = S.products.filter(function(x){ return x.id === l.id; })[0];
+          if(p && !stokBebas(p)) p.stock = Math.max(0, stokAda(p) - l.qty);
+        });
+        S.trx.unshift(trx);
+        if(S.trx.length > 500) S.trx.length = 500;
+        S.cart = [];
+        save();
+        return Promise.resolve(trx);
+      }
+      return api('/transaksi', { method:'POST', body:{
+        item: S.cart.map(function(l){ return { produk_id:l.id, jumlah:l.qty }; }),
+        bayar: round2(bayar)
+      }}).then(function(d){
+        var trx = dariTrx(d.transaksi);
+        S.products = d.produk.map(dariProduk);   // stok terbaru dari peladen
+        S.trx.unshift(trx);
+        S.cart = [];
+        return trx;
+      });
+    },
+
+    hapusTransaksi: function(id){
+      function buang(){ S.trx = S.trx.filter(function(y){ return y.id !== id; }); }
+      if(mode === 'lokal'){ buang(); save(); return Promise.resolve(); }
+      return api('/transaksi/' + encodeURIComponent(id), { method:'DELETE' }).then(buang);
+    },
+
+    /* Pengaturan toko. Di mode server ditulis ke basis data, kecuali "landing"
+       yang memang milik perangkat ini saja. */
+    simpanToko: function(){
+      simpanUiLokal();
+      if(mode === 'lokal'){ save(); return Promise.resolve(); }
+      return api('/toko', { method:'PUT', body:{
+        nama: S.settings.store, alamat: S.settings.addr, catatan_struk: S.settings.note,
+        mata_uang: S.settings.currency, dua_desimal: !!S.settings.decimals, tema: S.settings.theme
+      }});
+    },
+
+    ambilCadangan: function(){
+      if(mode === 'lokal') return Promise.resolve(backupJSON());
+      return api('/cadangan').then(function(d){ return JSON.stringify(d, null, 2); });
+    }
+  };
+})();
 
 /* ============================== TOAST / DIALOG ============================== */
 var ICO = {
@@ -1114,19 +1781,22 @@ function applyTheme(){
 }
 $('#themeBtn').addEventListener('click', function(){
   S.settings.theme = (S.settings.theme === 'dark' ? 'light' : 'dark');
-  applyTheme(); save();
+  applyTheme();
+  if(Gudang.diServer()) simpanNanti(); else save();
 });
 
 /* ============================== NAVIGASI ============================== */
 function nav(view){
   S.ui.view = view;
-  ['kasir','produk','riwayat','atur'].forEach(function(v){
+  hideFlash();
+  ['kasir','produk','riwayat','data','atur'].forEach(function(v){
     var el = $('#view-' + v); if(el) el.hidden = (v !== view);
   });
   $$('[data-nav]').forEach(function(b){ b.classList.toggle('is-on', b.getAttribute('data-nav') === view); });
   window.scrollTo({ top:0, behavior:'auto' });
   if(view === 'produk') renderProdukList();
   if(view === 'riwayat') renderRiwayat();
+  if(view === 'data') renderData();
   if(view === 'atur') renderAtur();
 }
 $$('[data-nav]').forEach(function(b){ b.addEventListener('click', function(){ nav(b.getAttribute('data-nav')); }); });
@@ -1154,20 +1824,33 @@ function categories(){
   S.products.forEach(function(p){ var c = (p.cat||'Lainnya').trim() || 'Lainnya'; if(!set[c]){ set[c] = 1; out.push(c); } });
   return out;
 }
+function catCount(c){
+  if(c === 'Semua') return S.products.length;
+  return S.products.filter(function(p){ return (p.cat || 'Lainnya') === c; }).length;
+}
 function renderCats(){
   var cats = categories();
   if(cats.indexOf(S.ui.cat) === -1) S.ui.cat = 'Semua';
   $('#cats').innerHTML = cats.map(function(c){
     return '<button class="chip' + (c === S.ui.cat ? ' is-on' : '') + '" data-cat="' + esc(c) + '">' + esc(c) + '</button>';
   }).join('');
+  /* Rel kiri hanya tampil ≥1180px, tapi tetap digambar di semua ukuran: menunda
+     penggambaran sampai lebarnya cukup berarti harus mendengarkan resize juga,
+     dan isinya cuma beberapa baris teks. */
+  $('#rail').innerHTML = cats.map(function(c){
+    return '<button' + (c === S.ui.cat ? ' class="is-on"' : '') + ' data-cat="' + esc(c) + '">' +
+      '<i>' + esc(c) + '</i><u>' + intf(catCount(c)) + '</u></button>';
+  }).join('');
   // datalist untuk form
   $('#catList').innerHTML = cats.filter(function(c){ return c !== 'Semua'; })
     .map(function(c){ return '<option value="' + esc(c) + '">'; }).join('');
 }
-$('#cats').addEventListener('click', function(e){
+function pickCat(e){
   var b = e.target.closest('[data-cat]'); if(!b) return;
   S.ui.cat = b.getAttribute('data-cat'); renderCats(); renderGrid();
-});
+}
+$('#cats').addEventListener('click', pickCat);
+$('#rail').addEventListener('click', pickCat);
 $('#q').addEventListener('input', function(e){ S.ui.q = e.target.value.toLowerCase(); renderGrid(); });
 
 function inCart(id){ var l = S.cart.filter(function(x){ return x.id === id; })[0]; return l ? l.qty : 0; }
@@ -1187,19 +1870,18 @@ function renderGrid(){
   }
   $('#pgrid').innerHTML = rows.map(function(p){
     var n = inCart(p.id);
-    var hasStock = (p.stock !== '' && p.stock != null);
-    var left = hasStock ? (Number(p.stock) - n) : null;
-    var out = hasStock && left <= 0;
+    var bebas = stokBebas(p);
+    var left = bebas ? null : (stokAda(p) - n);
+    var out = !bebas && left <= 0;
     var ava = p.emoji ? esc(p.emoji) : esc(initials(p.name));
     return '<button class="pcard' + (n ? ' is-in' : '') + (out ? ' is-out' : '') + '" data-add="' + esc(p.id) + '" style="--h:' + hue(p.name) + '">' +
       (n ? '<span class="pcard__b">' + n + '</span>' : '') +
-      '<span class="pcard__ava">' + ava + '</span>' +
+      '<span class="pcard__ava">' + ava +
+        (bebas ? '' : '<span class="pcard__s' + (out ? ' out' : (left <= 5 ? ' low' : '')) + '">' + (out ? 'Habis' : 'Sisa ' + intf(left)) + '</span>') +
+      '</span>' +
       '<span class="pcard__n">' + esc(p.name) + '</span>' +
       '<span class="pcard__c">' + esc(p.cat || 'Lainnya') + '</span>' +
       '<span class="pcard__p money">' + esc(fmt(p.price)) + '</span>' +
-      (hasStock
-        ? '<span class="pcard__s' + (left <= 5 ? ' low' : '') + '">' + (out ? 'Stok habis' : 'Sisa ' + intf(left) + ' pcs') + '</span>'
-        : '<span class="pcard__s">Stok bebas</span>') +
     '</button>';
   }).join('');
 }
@@ -1214,21 +1896,69 @@ function addToCart(id){
   if(!p) return;
   var line = S.cart.filter(function(x){ return x.id === id; })[0];
   var have = line ? line.qty : 0;
-  var hasStock = (p.stock !== '' && p.stock != null);
-  if(hasStock && have >= Number(p.stock)){ toast('Stok "' + p.name + '" tinggal ' + intf(p.stock) + ' pcs.','err'); return; }
+  if(have >= stokAda(p)){ toast('Stok "' + p.name + '" tinggal ' + intf(stokAda(p)) + ' pcs.','err'); return; }
   if(line){ line.qty += 1; }
   else{ S.cart.push({ id:p.id, name:p.name, price:Number(p.price)||0, emoji:p.emoji||'', qty:1 }); }
   renderCart(); renderGrid();
+  buzz(11); pulseCard(p.id); showFlash(p);
 }
+
+/* ---------- UMPAN BALIK KETUKAN ----------
+   Tiga lapis, sengaja rangkap, karena masing-masing gagal di keadaan berbeda:
+   getar tidak terasa kalau HP ditaruh di meja, denyut kartu tidak terlihat kalau
+   mata sudah pindah ke pembeli, dan flash-nya terlewat kalau kasir mengetuk
+   beruntun. Yang penting salah satunya nyangkut. */
+function pulseCard(id){
+  /* Kisi digambar ulang tiap penambahan, jadi elemennya selalu baru — tapi
+     kelasnya tetap dicopot lalu dipasang lagi supaya benar juga andai suatu saat
+     penggambarannya dibuat tidak merusak simpul. Pencocokan lewat getAttribute,
+     bukan selektor beruntai: id produk bisa berasal dari berkas cadangan yang
+     disunting tangan, dan tanda kutip di dalamnya akan mematahkan selektor. */
+  var el = null;
+  $$('#pgrid [data-add]').some(function(b){
+    if(b.getAttribute('data-add') === id){ el = b; return true; }
+    return false;
+  });
+  if(!el) return;
+  el.classList.remove('is-hit');
+  void el.offsetWidth;              // paksa reflow supaya animasinya benar-benar diulang
+  el.classList.add('is-hit');
+}
+
+var flashTimer = null, flashId = null;
+function showFlash(p){
+  var line = S.cart.filter(function(x){ return x.id === p.id; })[0];
+  if(!line){ hideFlash(); return; }
+  flashId = p.id;
+  $('#flAva').style.setProperty('--h', hue(p.name));
+  $('#flAva').textContent = p.emoji ? p.emoji : initials(p.name);
+  $('#flName').textContent = p.name;
+  $('#flMeta').innerHTML = '<i>' + esc(intf(line.qty)) + ' pcs</i> · ' + esc(fmt(round2(line.price * line.qty)));
+  $('#flash').classList.add('show');
+  // Ketukan berikutnya menyetel ulang hitungan mundur, bukan menumpuk popup baru.
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(hideFlash, 2600);
+}
+function hideFlash(){
+  clearTimeout(flashTimer); flashTimer = null; flashId = null;
+  $('#flash').classList.remove('show');
+}
+$('#flUndo').addEventListener('click', function(){
+  if(!flashId) return;
+  var id = flashId;
+  var l = S.cart.filter(function(x){ return x.id === id; })[0];
+  hideFlash();
+  if(!l) return;
+  setQty(id, l.qty - 1);
+  toast(l.qty <= 1 ? '"' + l.name + '" dikeluarkan' : '"' + l.name + '" jadi ' + intf(l.qty - 1) + ' pcs', 'info');
+});
 function setQty(id, q){
   var line = S.cart.filter(function(x){ return x.id === id; })[0];
   if(!line) return;
   var p = S.products.filter(function(x){ return x.id === id; })[0];
   if(q <= 0){ S.cart = S.cart.filter(function(x){ return x.id !== id; }); }
   else{
-    if(p && p.stock !== '' && p.stock != null && q > Number(p.stock)){
-      toast('Stok maksimal ' + intf(p.stock) + ' pcs.','err'); return;
-    }
+    if(q > stokAda(p)){ toast('Stok maksimal ' + intf(stokAda(p)) + ' pcs.','err'); return; }
     line.qty = q;
   }
   renderCart(); renderGrid();
@@ -1273,6 +2003,13 @@ function renderCart(){
   $('#btnPay').disabled = !S.cart.length;
   $('#cbCount').textContent = intf(t.lines) + ' item · ' + intf(t.qty) + ' pcs';
   $('#cbTotal').textContent = fmt(t.total);
+  /* Lima ikon terakhir, sisanya jadi satu keping "+n". Batasnya bukan soal
+     tempat semata: tumpukan yang lebih panjang berhenti terbaca sebagai isi
+     dan mulai terbaca sebagai hiasan. */
+  var MAX = 5;
+  $('#cbAv').innerHTML = S.cart.slice(0, MAX).map(function(l){
+    return '<span style="--h:' + hue(l.name) + '">' + (l.emoji ? esc(l.emoji) : esc(initials(l.name))) + '</span>';
+  }).join('') + (S.cart.length > MAX ? '<span class="more">+' + intf(S.cart.length - MAX) + '</span>' : '');
   $('#cartBar').classList.toggle('show', t.lines > 0 && !$('#cartWrap').classList.contains('open'));
 }
 $('#cartBody').addEventListener('click', function(e){
@@ -1283,10 +2020,10 @@ $('#cartBody').addEventListener('click', function(e){
 $('#btnClearCart').addEventListener('click', function(){
   if(!S.cart.length) return;
   confirmDlg('Kosongkan keranjang?','Semua barang di keranjang akan dihapus. Transaksi belum tersimpan.','Ya, kosongkan').then(function(ok){
-    if(ok){ S.cart = []; renderCart(); renderGrid(); closeCart(); toast('Keranjang dikosongkan','info'); }
+    if(ok){ S.cart = []; hideFlash(); renderCart(); renderGrid(); closeCart(); toast('Keranjang dikosongkan','info'); }
   });
 });
-function openCart(){ $('#cartWrap').classList.add('open'); $('#cartScrim').classList.add('show'); $('#cartBar').classList.remove('show'); }
+function openCart(){ hideFlash(); $('#cartWrap').classList.add('open'); $('#cartScrim').classList.add('show'); $('#cartBar').classList.remove('show'); }
 function closeCart(){ $('#cartWrap').classList.remove('open'); $('#cartScrim').classList.remove('show'); renderCart(); }
 $('#cartBar').addEventListener('click', openCart);
 $('#cartScrim').addEventListener('click', closeCart);
@@ -1330,6 +2067,7 @@ function openPay(){
     return '<button class="chip" data-pay="' + v + '">' + (i === 0 && v === Math.ceil(t.total) ? 'Uang Pas' : intf(v)) + '</button>';
   }).join('');
   updatePay();
+  hideFlash();
   openSheet('#paySheet');
 }
 $('#btnPay').addEventListener('click', openPay);
@@ -1368,31 +2106,27 @@ $('#btnFinish').addEventListener('click', function(){
   var pay = payValue();
   if(!t.lines || pay < t.total) return;
 
-  var today = daykey(Date.now());
-  var seq = S.trx.filter(function(x){ return daykey(x.ts) === today; }).length + 1;
-  var d = new Date();
-  var trx = {
-    id: 't' + Date.now() + Math.floor(Math.random()*1000),
-    no: 'TRX-' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '-' + ('00' + seq).slice(-3),
-    ts: Date.now(),
-    items: S.cart.map(function(l){ return { name:l.name, emoji:l.emoji, price:l.price, qty:l.qty, sub:round2(l.price * l.qty) }; }),
-    lines: t.lines, qty: t.qty, total: t.total,
-    pay: round2(pay), change: round2(pay - t.total),
-    store: S.settings.store, addr: S.settings.addr, note: S.settings.note, cur: S.settings.currency, dec: S.settings.decimals
-  };
-  // kurangi stok
-  S.cart.forEach(function(l){
-    var p = S.products.filter(function(x){ return x.id === l.id; })[0];
-    if(p && p.stock !== '' && p.stock != null) p.stock = Math.max(0, Number(p.stock) - l.qty);
+  /* Tombolnya dimatikan selama menunggu. Di mode server ini satu perjalanan ke
+     peladen, dan pada sinyal lambat kasir pasti menekannya lagi karena tidak
+     ada yang berubah di layar — ketukan kedua itu akan jadi transaksi kedua. */
+  var tbl = $('#btnFinish');
+  tbl.disabled = true;
+  var labelLama = tbl.textContent;
+  tbl.textContent = 'Menyimpan…';
+
+  Gudang.selesaikan(pay).then(function(trx){
+    closeSheet('#paySheet');
+    closeCart();
+    hideFlash();
+    renderCart(); renderGrid();
+    showReceipt(trx);
+  }).catch(function(e){
+    toast(e.message || 'Transaksi gagal disimpan', 'err');
+    if(e.perluMasuk) mintaMasuk();
+  }).then(function(){
+    tbl.textContent = labelLama;
+    updatePay();
   });
-  S.trx.unshift(trx);
-  if(S.trx.length > 500) S.trx.length = 500;
-  S.cart = [];
-  save();
-  closeSheet('#paySheet');
-  closeCart();
-  renderCart(); renderGrid();
-  showReceipt(trx);
 });
 
 /* ============================== STRUK ============================== */
@@ -1499,7 +2233,7 @@ function renderProdukList(){
   }
   $('#plist').innerHTML = rows.map(function(p){
     var ava = p.emoji ? esc(p.emoji) : esc(initials(p.name));
-    var st = (p.stock === '' || p.stock == null) ? 'stok bebas' : 'stok ' + intf(p.stock);
+    var st = stokBebas(p) ? 'stok bebas' : 'stok ' + intf(stokAda(p));
     return '<div class="item" style="--h:' + hue(p.name) + '">' +
       '<div class="item__ava">' + ava + '</div>' +
       '<div class="item__b"><b>' + esc(p.name) + '</b>' +
@@ -1520,10 +2254,13 @@ $('#plist').addEventListener('click', function(e){
     if(!p) return;
     confirmDlg('Hapus produk?','"' + p.name + '" akan dihapus dari daftar. Riwayat transaksi lama tidak terpengaruh.','Ya, hapus').then(function(ok){
       if(!ok) return;
-      S.products = S.products.filter(function(x){ return x.id !== id; });
-      S.cart = S.cart.filter(function(x){ return x.id !== id; });
-      save(); renderProdukList(); renderCats(); renderGrid(); renderCart();
-      toast('Produk dihapus','ok');
+      Gudang.hapusProduk(id).then(function(){
+        renderProdukList(); renderCats(); renderGrid(); renderCart();
+        toast('Produk dihapus','ok');
+      }).catch(function(e){
+        toast(e.message || 'Produk gagal dihapus','err');
+        if(e.perluMasuk) mintaMasuk();
+      });
     });
   }
 });
@@ -1536,7 +2273,7 @@ function openForm(id){
   $('#fCat').value   = p ? (p.cat || '') : '';
   $('#fEmoji').value = p ? (p.emoji || '') : '';
   $('#fPrice').value = p ? String(p.price) : '';
-  $('#fStock').value = (p && p.stock !== '' && p.stock != null) ? String(p.stock) : '';
+  $('#fStock').value = (p && !stokBebas(p)) ? String(stokAda(p)) : '';
   hintPrice();
   openSheet('#formSheet');
   setTimeout(function(){ $('#fName').focus(); }, 260);
@@ -1552,7 +2289,7 @@ $('#btnSaveProduct').addEventListener('click', function(){
   if(!name){ toast('Nama barang wajib diisi','err'); $('#fName').focus(); return; }
   if(price <= 0){ toast('Harga satuan harus lebih dari 0','err'); $('#fPrice').focus(); return; }
   var stockRaw = $('#fStock').value.trim();
-  var stock = stockRaw === '' ? '' : Math.max(0, Math.round(parseMoney(stockRaw)));
+  var stock = stockRaw === '' ? null : Math.max(0, Math.round(parseMoney(stockRaw)));   // null = tak dibatasi (skema v2)
   var data = {
     name: name,
     cat: $('#fCat').value.trim() || 'Lainnya',
@@ -1560,26 +2297,33 @@ $('#btnSaveProduct').addEventListener('click', function(){
     price: round2(price),
     stock: stock
   };
-  if(S.ui.editing){
-    var p = S.products.filter(function(x){ return x.id === S.ui.editing; })[0];
-    if(p){ Object.assign(p, data); }
-    var line = S.cart.filter(function(x){ return x.id === S.ui.editing; })[0];
-    if(line){ line.name = data.name; line.price = data.price; line.emoji = data.emoji; }
-    toast('Produk diperbarui','ok');
-  }else{
-    S.products.unshift(Object.assign({ id:uid() }, data));
-    toast('Produk ditambahkan','ok');
-  }
-  S.ui.editing = null;
-  save(); closeSheet('#formSheet');
-  renderProdukList(); renderCats(); renderGrid(); renderCart();
+  var sedangUbah = S.ui.editing;
+  var tbl = $('#btnSaveProduct'); tbl.disabled = true;
+
+  Gudang.simpanProduk(data, sedangUbah).then(function(){
+    if(sedangUbah){
+      var line = S.cart.filter(function(x){ return x.id === sedangUbah; })[0];
+      if(line){ line.name = data.name; line.price = data.price; line.emoji = data.emoji; }
+    }
+    S.ui.editing = null;
+    closeSheet('#formSheet');
+    renderProdukList(); renderCats(); renderGrid(); renderCart();
+    toast(sedangUbah ? 'Produk diperbarui' : 'Produk ditambahkan','ok');
+  }).catch(function(e){
+    toast(e.message || 'Produk gagal disimpan','err');
+    if(e.perluMasuk) mintaMasuk();
+  }).then(function(){ tbl.disabled = false; });
 });
 $('#btnSeed').addEventListener('click', function(){
   confirmDlg('Muat contoh produk?','13 produk contoh akan ditambahkan ke daftar. Produk yang sudah ada tetap aman.','Ya, muat').then(function(ok){
     if(!ok) return;
-    S.products = seedProducts().concat(S.products);
-    save(); renderProdukList(); renderCats(); renderGrid();
-    toast('Contoh produk dimuat','ok');
+    Gudang.tambahContoh().then(function(n){
+      renderProdukList(); renderCats(); renderGrid();
+      toast(intf(n) + ' contoh produk dimuat','ok');
+    }).catch(function(e){
+      toast(e.message || 'Contoh gagal dimuat','err');
+      if(e.perluMasuk) mintaMasuk();
+    });
   });
 });
 
@@ -1621,8 +2365,12 @@ $('#rlist').addEventListener('click', function(e){
     var id = d.getAttribute('data-rdel');
     confirmDlg('Hapus catatan transaksi?','Baris riwayat ini akan dihapus permanen. Stok tidak dikembalikan.','Ya, hapus').then(function(ok){
       if(!ok) return;
-      S.trx = S.trx.filter(function(y){ return y.id !== id; });
-      save(); renderRiwayat(); toast('Riwayat dihapus','ok');
+      Gudang.hapusTransaksi(id).then(function(){
+        renderRiwayat(); toast('Riwayat dihapus','ok');
+      }).catch(function(e){
+        toast(e.message || 'Riwayat gagal dihapus','err');
+        if(e.perluMasuk) mintaMasuk();
+      });
     });
   }
 });
@@ -1637,54 +2385,122 @@ function renderAtur(){
   $('#setLand').classList.toggle('on', !!S.settings.landing);
   var bytes = 0;
   try{ bytes = (localStorage.getItem(LS) || '').length; }catch(e){}
-  $('#dbInfo').textContent = intf(S.products.length) + ' produk · ' + intf(S.trx.length) + ' transaksi · ' + (bytes > 1024 ? (bytes/1024).toFixed(1) + ' KB' : bytes + ' B');
+  $('#dbInfo').textContent = intf(S.products.length) + ' produk · ' + intf(S.trx.length) + ' transaksi · ' +
+    (bytes > 1024 ? (bytes/1024).toFixed(1) + ' KB' : bytes + ' B') + ' · skema v' + S.schema;
+
+  var raw = bakRaw();
+  $('#rowBak').hidden = !raw;
+  if(raw){
+    var kb = raw.length > 1024 ? (raw.length/1024).toFixed(1) + ' KB' : raw.length + ' B';
+    var jml = '';
+    try{ var d = JSON.parse(raw); if(Array.isArray(d.products)) jml = intf(d.products.length) + ' produk · '; }catch(e){}
+    $('#bakInfo').textContent = jml + kb + ' — bentuk data sebelum perubahan terakhir';
+  }
   var w = $('#storageWarn');
   if(!storageOK){ w.hidden = false; w.textContent = '⚠ Browser ini memblokir penyimpanan lokal. Data hanya bertahan selama halaman terbuka — unduh cadangan sebelum menutup.'; }
   else{ w.hidden = true; }
 }
+/* Pengaturan disimpan tertunda. Di mode lokal menulis tiap ketukan tuts memang
+   murah, tapi di mode server itu satu permintaan jaringan per HURUF yang
+   diketik — nama toko sepanjang 20 huruf jadi 20 permintaan, dan yang datang
+   terakhir belum tentu yang paling baru. */
+var jedaSimpan = null;
+function simpanNanti(){
+  clearTimeout(jedaSimpan);
+  jedaSimpan = setTimeout(function(){
+    jedaSimpan = null;
+    Gudang.simpanToko().catch(function(e){
+      toast(e.message || 'Pengaturan gagal disimpan','err');
+      if(e.perluMasuk) mintaMasuk();
+    });
+  }, 500);
+}
+
 function bindSetting(sel, key){
-  $(sel).addEventListener('input', function(e){ S.settings[key] = e.target.value; save(); syncStoreBar(); });
+  $(sel).addEventListener('input', function(e){ S.settings[key] = e.target.value; simpanNanti(); syncStoreBar(); });
 }
 bindSetting('#setStore','store'); bindSetting('#setAddr','addr'); bindSetting('#setNote','note');
 $('#setCur').addEventListener('input', function(e){
   S.settings.currency = e.target.value.trim() || 'Rp';
-  save(); renderGrid(); renderCart(); renderProdukList();
+  simpanNanti(); renderGrid(); renderCart(); renderProdukList();
 });
 $('#setDec').addEventListener('click', function(){
   S.settings.decimals = !S.settings.decimals;
   $('#setDec').classList.toggle('on', S.settings.decimals);
-  save(); renderGrid(); renderCart(); renderProdukList(); renderRiwayat();
+  simpanNanti(); renderGrid(); renderCart(); renderProdukList(); renderRiwayat();
   toast(S.settings.decimals ? 'Format 2 digit desimal aktif' : 'Format tanpa desimal', 'info');
 });
 $('#setLand').addEventListener('click', function(){
   S.settings.landing = !S.settings.landing;
   $('#setLand').classList.toggle('on', S.settings.landing);
-  save();
+  simpanNanti();
 });
 function syncStoreBar(){
   $('#tbStore').textContent = S.settings.store || 'Kasir';
+  /* Lencana mode dipasang DI SINI, bukan sekali waktu boot: baris di atas
+     menulis ulang textContent tiap kali nama toko berubah, dan apa pun yang
+     ditempel dari tempat lain akan ikut terhapus tanpa jejak. */
+  if(Gudang.diServer()){
+    var t = document.createElement('span');
+    t.className = 'modetag';
+    t.textContent = 'server';
+    t.title = 'Data tersimpan di peladen dan dipakai bersama semua perangkat';
+    $('#tbStore').appendChild(t);
+  }
   $('#tbSub').textContent = S.settings.addr || 'Point of Sale';
 }
 function backupJSON(){
-  return JSON.stringify({ v:1, saved:new Date().toISOString(), products:S.products, trx:S.trx, settings:S.settings }, null, 2);
+  /* "v" dipertahankan di depan walau sudah ada "schema": petunjuk di lembar
+     Tempel menyuruh pemakai memastikan teksnya diawali {"v":1, dan versi
+     aplikasi lama hanya mengenali kolom itu. Membuangnya akan membuat cadangan
+     baru ditolak oleh HP yang belum diperbarui — persis di saat orang paling
+     butuh memulihkan. */
+  return JSON.stringify({
+    v:1, schema:S.schema, saved:new Date().toISOString(),
+    products:S.products, trx:S.trx, settings:S.settings
+  }, null, 2);
 }
 function applyBackup(text){
   var d = null;
   try{ d = JSON.parse(String(text || '').trim()); }catch(err){ toast('Teks cadangan tidak terbaca','err'); return; }
   if(!d || !Array.isArray(d.products)){ toast('Isi cadangan tidak sesuai','err'); return; }
-  confirmDlg('Pulihkan data?','Produk, riwayat, dan pengaturan saat ini akan diganti dengan isi cadangan.','Ya, pulihkan').then(function(ok){
+  var from = Number(d.schema || d.v || 1) || 1;
+  var msg = 'Produk, riwayat, dan pengaturan saat ini akan diganti dengan isi cadangan.';
+  if(from < SCHEMA) msg += ' Cadangan ini dari versi lama — isinya disesuaikan dulu secara otomatis.';
+  if(Gudang.diServer()) msg += ' Yang diganti adalah data di peladen, jadi seluruh perangkat ikut berubah.';
+  confirmDlg('Pulihkan data?', msg, 'Ya, pulihkan').then(function(ok){
     if(!ok) return;
-    S.products = d.products;
-    S.trx = Array.isArray(d.trx) ? d.trx : [];
-    S.settings = Object.assign({}, DEFAULTS, d.settings || {});
-    S.cart = [];
-    S.products.forEach(function(p){ if(!p.id) p.id = uid(); p.price = Number(p.price)||0; });
+
+    if(Gudang.diServer()){
+      /* Cadangan bentuk lokal dikirim apa adanya; peladen yang menerjemahkan.
+         Di sana juga diambil cadangan otomatis sebelum apa pun dihapus. */
+      Gudang.api('/pulihkan', { method:'POST', body:d })
+        .then(function(){ return Gudang.muat(); })
+        .then(function(){
+          applyTheme(); syncStoreBar(); renderCats(); renderGrid(); renderCart();
+          renderProdukList(); renderRiwayat(); renderAtur();
+          toast('Data dipulihkan ke peladen — ' + intf(S.products.length) + ' produk','ok');
+        })
+        .catch(function(e){
+          toast(e.message || 'Pemulihan gagal','err');
+          if(e.perluMasuk) mintaMasuk();
+        });
+      return;
+    }
+
+    /* Data yang sekarang disalin dulu. Memulihkan cadangan yang keliru adalah
+       cara paling gampang menghapus sehari penuh penjualan, dan sampai sini
+       tidak ada satu pun langkah yang bisa dibatalkan. */
+    try{ snapshot(localStorage.getItem(LS)); }catch(e){}
+    adopt(migrate(d));
     save(); applyTheme(); syncStoreBar(); renderCats(); renderGrid(); renderCart(); renderProdukList(); renderRiwayat(); renderAtur();
     toast('Data dipulihkan — ' + intf(S.products.length) + ' produk','ok');
   });
 }
 $('#btnCopyBk').addEventListener('click', function(){
-  copyText(backupJSON(), 'Cadangan disalin — tempel ke WhatsApp/Notes');
+  Gudang.ambilCadangan()
+    .then(function(t){ copyText(t, 'Cadangan disalin — tempel ke WhatsApp/Notes'); })
+    .catch(function(e){ toast(e.message || 'Cadangan gagal diambil','err'); });
 });
 $('#btnPasteBk').addEventListener('click', function(){
   $('#pasteArea').value = '';
@@ -1697,10 +2513,7 @@ $('#btnPasteOk').addEventListener('click', function(){
   closeSheet('#pasteSheet');
   applyBackup(v);
 });
-$('#btnExport').addEventListener('click', function(){
-  var d = new Date();
-  var name = 'cadangan-kasir-' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '.json';
-  var json = backupJSON();
+function unduhJSON(name, json, okMsg){
   var b = bridge();
   if(b && b.saveBackup){ try{ b.saveBackup(name, json); return; }catch(e){} }
   var blob = new Blob([json], { type:'application/json' });
@@ -1709,7 +2522,26 @@ $('#btnExport').addEventListener('click', function(){
   a.download = name;
   document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
-  toast('Cadangan diunduh','ok');
+  toast(okMsg || 'Cadangan diunduh','ok');
+}
+function tanggalBerkas(){ var d = new Date(); return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()); }
+
+$('#btnExport').addEventListener('click', function(){
+  Gudang.ambilCadangan()
+    .then(function(t){ unduhJSON('cadangan-kasir-' + tanggalBerkas() + '.json', t, 'Cadangan diunduh'); })
+    .catch(function(e){ toast(e.message || 'Cadangan gagal diambil','err'); });
+});
+
+/* Salinan mentah sebelum migrasi/pemulihan/reset terakhir. Sengaja hanya bisa
+   DIUNDUH, bukan dipulihkan sekali ketuk: kalau langsung dipulihkan, pemakai
+   yang salah pencet di sini kehilangan penjualan sesudah migrasi, dan kita balik
+   ke masalah yang sama dari arah sebaliknya. Diunduh dulu, diperiksa, baru masuk
+   lewat "Pulihkan dari file" — jalur yang memang sudah minta konfirmasi. */
+function bakRaw(){ try{ return localStorage.getItem(LSB); }catch(e){ return null; } }
+$('#btnBak').addEventListener('click', function(){
+  var raw = bakRaw();
+  if(!raw){ toast('Tidak ada salinan tersimpan','err'); renderAtur(); return; }
+  unduhJSON('cadangan-kasir-sebelum-pemutakhiran-' + tanggalBerkas() + '.json', raw, 'Salinan lama diunduh');
 });
 $('#btnImport').addEventListener('click', function(){ $('#fileImport').click(); });
 $('#fileImport').addEventListener('change', function(e){
@@ -1722,14 +2554,299 @@ $('#fileImport').addEventListener('change', function(e){
   e.target.value = '';
 });
 $('#btnReset').addEventListener('click', function(){
+  /* Di mode server tombol ini sengaja tidak menghapus apa pun. Menghapus data
+     seluruh toko dari semua perangkat lewat satu tombol di halaman pengaturan
+     terlalu dekat dengan jempol yang sedang menggulung. Yang setara ada di menu
+     Data — di sana penghapusan wajib dipratinjau dulu, jumlah barisnya terlihat
+     sebelum ditekan, dan cadangannya terambil otomatis. */
+  if(Gudang.diServer()){
+    confirmDlg('Hapus lewat menu Data',
+      'Di mode server, penghapusan massal dilakukan lewat menu Data supaya jumlah barisnya terlihat dulu sebelum dijalankan, dan cadangannya terambil otomatis. Contohnya: DELETE FROM transaksi',
+      'Mengerti').then(function(){ nav('data'); });
+    return;
+  }
   confirmDlg('Hapus semua data?','Seluruh produk, riwayat transaksi, dan pengaturan akan kembali ke bawaan. Tindakan ini tidak bisa dibatalkan.','Ya, hapus semua').then(function(ok){
     if(!ok) return;
-    try{ localStorage.removeItem(LS); }catch(e){}
+    try{ snapshot(localStorage.getItem(LS)); localStorage.removeItem(LS); }catch(e){}
+    S.schema = SCHEMA;
     S.products = seedProducts(); S.trx = []; S.cart = []; S.settings = Object.assign({}, DEFAULTS);
     save(); applyTheme(); syncStoreBar(); renderCats(); renderGrid(); renderCart(); renderProdukList(); renderRiwayat(); renderAtur();
     toast('Data direset ke bawaan','ok');
   });
 });
+
+
+/* ============================== MASUK ============================== */
+var masukTertunda = null;
+function mintaMasuk(){
+  $('#masukGalat').hidden = true;
+  $('#masukSandi').value = '';
+  openSheet('#masukSheet');
+  setTimeout(function(){ $('#masukSandi').focus(); }, 260);
+  /* Satu janji dipakai bersama semua pemanggil: kalau tiga permintaan gagal
+     berbarengan karena sesi habis, yang muncul tetap satu kotak, bukan tiga. */
+  if(!masukTertunda){
+    masukTertunda = new Promise(function(res){ mintaMasuk._selesai = res; });
+  }
+  return masukTertunda;
+}
+function selesaiMasuk(){
+  var f = mintaMasuk._selesai;
+  masukTertunda = null; mintaMasuk._selesai = null;
+  if(f) f(true);
+}
+function cobaMasuk(){
+  var sandi = $('#masukSandi').value;
+  if(!sandi){ $('#masukGalat').textContent = 'Kata sandi masih kosong.'; $('#masukGalat').hidden = false; return; }
+  var b = $('#btnMasuk'); b.disabled = true; b.textContent = 'Memeriksa…';
+  Gudang.masuk(sandi).then(function(){
+    closeSheet('#masukSheet');
+    return Gudang.muat().then(function(){
+      applyTheme(); syncStoreBar(); renderCats(); renderGrid(); renderCart();
+      /* Langsung masuk ke aplikasinya. Orang yang baru saja mengetik kata sandi
+         sudah menyatakan mau memakai kasirnya; menyisakan halaman depan dengan
+         tombol "Buka Aplikasi" cuma satu ketukan yang tidak menanyakan apa pun.
+         Tampilan yang sedang dibuka dipertahankan, supaya sesi yang habis di
+         tengah kerja tidak melempar kasir balik ke layar Kasir. */
+      showApp(S.ui.view || 'kasir');
+      selesaiMasuk();
+      toast('Berhasil masuk','ok');
+    });
+  }).catch(function(e){
+    $('#masukGalat').textContent = e.message || 'Gagal masuk.';
+    $('#masukGalat').hidden = false;
+    $('#masukSandi').select();
+  }).then(function(){ b.disabled = false; b.textContent = 'Masuk'; });
+}
+$('#btnMasuk').addEventListener('click', cobaMasuk);
+$('#masukSandi').addEventListener('keydown', function(e){ if(e.key === 'Enter') cobaMasuk(); });
+
+/* ============================== DATA / SQL ==============================
+   Alur menulisnya sengaja dua langkah, dan langkah pertama tidak bisa
+   dilewati: kueri yang mengubah data selalu dijalankan sebagai PRATINJAU
+   dulu — dijalankan sungguhan di basis data, lalu dibatalkan — supaya jumlah
+   baris yang akan terkena terbaca sebelum apa pun berubah.
+
+   Ini menjawab kesalahan yang paling mahal di kotak seperti ini: lupa menulis
+   WHERE. "UPDATE produk SET harga = 0" dan "UPDATE produk SET harga = 0 WHERE
+   id = ..." kelihatan mirip di layar kecil, tapi yang satu mengubah 4 baris dan
+   yang lain 400. Angkanya yang membedakan, bukan hurufnya. */
+
+var CONTOH_SQL = [
+  { n:'Semua produk, termurah dulu', q:'SELECT nama, kategori, harga, stok\nFROM produk\nORDER BY harga' },
+  { n:'Stok menipis',                q:'SELECT * FROM stok_menipis' },
+  { n:'Omset per hari',              q:'SELECT * FROM penjualan_harian LIMIT 30' },
+  { n:'Barang terlaris',             q:'SELECT * FROM produk_terlaris LIMIT 20' },
+  { n:'Omset bulan ini',             q:"SELECT sum(total) AS omset, count(*) AS transaksi\nFROM transaksi\nWHERE waktu >= date_trunc('month', now())" },
+  { n:'Barang yang belum pernah laku', q:'SELECT p.nama, p.harga, p.stok\nFROM produk p\nLEFT JOIN transaksi_item i ON i.produk_id = p.id\nWHERE i.id IS NULL' },
+  { n:'Naikkan harga Sembako 10%',   q:"UPDATE produk\nSET harga = round(harga * 1.10, 2)\nWHERE kategori = 'Sembako'", tulis:true },
+  { n:'Isi ulang stok yang habis',   q:'UPDATE produk\nSET stok = 20\nWHERE stok = 0', tulis:true },
+  { n:'Hapus riwayat tahun lalu',    q:"DELETE FROM transaksi\nWHERE waktu < date_trunc('year', now())", tulis:true }
+];
+
+/* Cerminan sepertinyaBaca() di peladen. Dipakai HANYA untuk memilih langkah
+   mana yang ditawarkan duluan — yang benar-benar menolak penulisan tetap
+   transaksi READ ONLY di sisi Postgres. Kalau tebakan ini meleset, yang terjadi
+   paling buruk cuma pesan "read-only", bukan data yang berubah diam-diam. */
+function kueriBaca(q){
+  var bersih = String(q).replace(/\/\*[\s\S]*?\*\//g,' ').replace(/--[^\n]*/g,' ').trim();
+  // Kotak kosong dihitung "baca": tidak ada apa pun untuk dipratinjau, dan
+  // tombol bertuliskan "Pratinjau perubahan" di atas kotak yang masih kosong
+  // menjanjikan sesuatu yang tidak ada.
+  if(!bersih) return true;
+  return /^\s*(select|with|table|show|explain)\b/i.test(bersih);
+}
+
+var kueriTertahan = null;   // kueri tulis yang sudah dipratinjau, menunggu ditegaskan
+
+function setSibuk(sibuk){
+  $('#btnJalan').disabled = sibuk;
+  $('#lblJalan').textContent = sibuk ? 'Menjalankan…' : (kueriBaca($('#sqlKueri').value) ? 'Jalankan' : 'Pratinjau perubahan');
+}
+function bersihkanHasil(){
+  $('#sqlGalat').hidden = true; $('#sqlMeta').hidden = true;
+  $('#sqlHasil').innerHTML = ''; $('#sqlConf').hidden = true; kueriTertahan = null;
+}
+
+function tampilkanGalat(pesan){
+  bersihkanHasil();
+  $('#sqlGalat').textContent = pesan;
+  $('#sqlGalat').hidden = false;
+}
+
+function tampilkanHasil(r){
+  var m = [];
+  m.push('<span class="tag' + (r.dibatalkan ? '' : ' ok') + '">' +
+         (r.mode === 'baca' ? 'dibaca' : (r.dibatalkan ? 'pratinjau — dibatalkan' : 'disimpan')) + '</span>');
+  m.push('<b>' + intf(r.jumlahBaris) + '</b> baris');
+  if(r.perintah) m.push('· ' + esc(r.perintah));
+  m.push('· ' + intf(r.ms) + ' ms');
+  if(r.terpotong) m.push('<span class="tag pot">ditampilkan ' + intf(r.baris.length) + ' teratas</span>');
+  $('#sqlMeta').innerHTML = m.join(' ');
+  $('#sqlMeta').hidden = false;
+
+  if(!r.kolom || !r.kolom.length){
+    $('#sqlHasil').innerHTML = '<div class="kosong">Perintah selesai — tidak ada tabel untuk ditampilkan.</div>';
+    return;
+  }
+  if(!r.baris.length){
+    $('#sqlHasil').innerHTML = '<div class="kosong">Tidak ada baris yang cocok.</div>';
+    return;
+  }
+  var h = '<table><thead><tr>' + r.kolom.map(function(k){ return '<th>' + esc(k) + '</th>'; }).join('') + '</tr></thead><tbody>';
+  h += r.baris.map(function(baris){
+    return '<tr>' + baris.map(function(v){
+      if(v === null || v === undefined) return '<td class="nil">NULL</td>';
+      if(typeof v === 'object') return '<td>' + esc(JSON.stringify(v)) + '</td>';
+      var angka = (typeof v === 'number') || (/^-?\d+(\.\d+)?$/.test(String(v)));
+      return '<td' + (angka ? ' class="num"' : '') + '>' + esc(String(v)) + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+  $('#sqlHasil').innerHTML = h + '</tbody></table>';
+}
+
+function kirimSQL(kueri, mode){
+  setSibuk(true);
+  return Gudang.api('/sql', { method:'POST', body:{ kueri:kueri, mode:mode } })
+    .catch(function(e){
+      /* Galat SQL sendiri datang sebagai 400 berisi pesan asli Postgres, dan
+         pesan itu justru yang paling berguna — "column harga2 does not exist"
+         menyebut persis kesalahannya. Diteruskan apa adanya. */
+      throw e;
+    })
+    .then(function(r){ return r; })
+    .then(function(r){ setSibuk(false); return r; },
+          function(e){ setSibuk(false); throw e; });
+}
+
+function jalankanSQL(){
+  var kueri = $('#sqlKueri').value.trim();
+  if(!kueri){ toast('Kotak kuerinya masih kosong','err'); return; }
+  bersihkanHasil();
+
+  var baca = kueriBaca(kueri);
+  kirimSQL(kueri, baca ? 'baca' : 'coba').then(function(r){
+    tampilkanHasil(r);
+    muatJejak();
+    if(!baca){
+      // Pratinjau selesai — sekarang angkanya ada, baru boleh ditawarkan.
+      kueriTertahan = kueri;
+      $('#confJudul').textContent = intf(r.jumlahBaris) + ' baris akan berubah';
+      $('#confPesan').textContent = r.jumlahBaris === 0
+        ? 'Tidak ada baris yang cocok — menyimpan tidak akan mengubah apa pun. Periksa lagi bagian WHERE-nya.'
+        : 'Barusan ini pratinjau; belum ada yang berubah. Cadangan otomatis diambil sebelum disimpan.';
+      $('#sqlConf').hidden = false;
+    }
+  }).catch(function(e){
+    if(e.perluMasuk){ mintaMasuk(); return; }
+    tampilkanGalat(e.message || 'Kueri gagal.');
+    muatJejak();
+  });
+}
+
+$('#btnJalan').addEventListener('click', jalankanSQL);
+$('#btnBersih').addEventListener('click', function(){ $('#sqlKueri').value = ''; bersihkanHasil(); setSibuk(false); });
+$('#sqlKueri').addEventListener('input', function(){
+  if(!$('#btnJalan').disabled) setSibuk(false);   // menyegarkan label Jalankan/Pratinjau
+  if(kueriTertahan && $('#sqlKueri').value.trim() !== kueriTertahan){
+    // Kuerinya disunting sesudah dipratinjau: angka di palang sudah basi.
+    $('#sqlConf').hidden = true; kueriTertahan = null;
+  }
+});
+$('#sqlKueri').addEventListener('keydown', function(e){
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); jalankanSQL(); }
+});
+$('#btnBatalTulis').addEventListener('click', function(){ $('#sqlConf').hidden = true; kueriTertahan = null; });
+
+$('#btnSimpanTulis').addEventListener('click', function(){
+  if(!kueriTertahan) return;
+  var kueri = kueriTertahan;
+  var b = $('#btnSimpanTulis'); b.disabled = true; b.textContent = 'Menyimpan…';
+  kirimSQL(kueri, 'jalan').then(function(r){
+    $('#sqlConf').hidden = true; kueriTertahan = null;
+    tampilkanHasil(r);
+    toast(intf(r.jumlahBaris) + ' baris disimpan','ok');
+    muatJejak();
+    /* Kuerinya bisa saja baru mengubah produk atau riwayat, jadi keadaan di
+       layar ditarik ulang — kalau tidak, kasir masih melihat harga lama sampai
+       aplikasinya dibuka ulang. */
+    return Gudang.muat().then(function(){
+      applyTheme(); syncStoreBar(); renderCats(); renderGrid(); renderCart();
+      renderProdukList(); renderRiwayat();
+    });
+  }).catch(function(e){
+    if(e.perluMasuk){ mintaMasuk(); return; }
+    tampilkanGalat(e.message || 'Kueri gagal disimpan.');
+    muatJejak();
+  }).then(function(){ b.disabled = false; b.textContent = 'Ya, simpan'; });
+});
+
+function muatContoh(){
+  $('#sqlContoh').innerHTML = CONTOH_SQL.map(function(c, i){
+    return '<button data-contoh="' + i + '"' + (c.tulis ? ' class="tulis"' : '') + '>' +
+      '<b>' + esc(c.n) + '</b><span>' + esc(c.q.replace(/\s+/g, ' ')) + '</span></button>';
+  }).join('');
+}
+$('#sqlContoh').addEventListener('click', function(e){
+  var b = e.target.closest('[data-contoh]'); if(!b) return;
+  $('#sqlKueri').value = CONTOH_SQL[Number(b.getAttribute('data-contoh'))].q;
+  bersihkanHasil(); setSibuk(false);
+  $('#sqlKueri').focus();
+});
+
+function muatJejak(){
+  if(!Gudang.diServer()) return;
+  Gudang.api('/sql/jejak?batas=12').then(function(d){
+    var j = d.jejak || [];
+    if(!j.length){ $('#sqlJejak').innerHTML = '<div class="kosong" style="padding:14px;font-size:12px">Belum ada.</div>'; return; }
+    $('#sqlJejak').innerHTML = j.map(function(x, i){
+      return '<button data-jejak="' + i + '"' + (x.galat ? ' class="gagal"' : '') + ' title="' + esc(x.kueri) + '">' +
+        esc(x.kueri.replace(/\s+/g, ' ')) + '</button>';
+    }).join('');
+    $('#sqlJejak')._data = j;
+  }).catch(function(){});
+}
+$('#sqlJejak').addEventListener('click', function(e){
+  var b = e.target.closest('[data-jejak]'); if(!b) return;
+  var j = $('#sqlJejak')._data || [];
+  var x = j[Number(b.getAttribute('data-jejak'))];
+  if(!x) return;
+  $('#sqlKueri').value = x.kueri;
+  bersihkanHasil(); setSibuk(false);
+  $('#sqlKueri').focus();
+});
+
+$('#btnSkema').addEventListener('click', function(){
+  Gudang.api('/sql/skema').then(function(d){
+    $('#skemaIsi').innerHTML = (d.skema || []).map(function(t){
+      return '<div class="skematbl"><div class="skematbl__n"><b>' + esc(t.tabel) + '</b><i>' + esc(t.jenis) + '</i></div>' +
+        '<div class="skemakol">' + t.kolom.map(function(k){
+          return '<button data-sisip="' + esc(k.nama) + '">' + esc(k.nama) + '<u>' + esc(k.tipe) + '</u></button>';
+        }).join('') + '</div></div>';
+    }).join('') || '<div class="kosong">Tidak ada tabel.</div>';
+    openSheet('#skemaSheet');
+  }).catch(function(e){
+    if(e.perluMasuk) mintaMasuk(); else toast(e.message || 'Daftar tabel gagal dimuat','err');
+  });
+});
+$('#skemaIsi').addEventListener('click', function(e){
+  var b = e.target.closest('[data-sisip]'); if(!b) return;
+  var ta = $('#sqlKueri');
+  var pos = ta.selectionStart == null ? ta.value.length : ta.selectionStart;
+  var teks = b.getAttribute('data-sisip');
+  ta.value = ta.value.slice(0, pos) + teks + ta.value.slice(ta.selectionEnd == null ? pos : ta.selectionEnd);
+  closeSheet('#skemaSheet');
+  ta.focus();
+  ta.setSelectionRange(pos + teks.length, pos + teks.length);
+});
+
+function renderData(){
+  $('#dtSub').textContent = 'SQL langsung ke basis data toko · ' +
+    intf(S.products.length) + ' produk · ' + intf(S.trx.length) + ' transaksi';
+  if(!$('#sqlContoh').children.length) muatContoh();
+  muatJejak();
+  setSibuk(false);
+}
 
 /* ============================== TOMBOL BACK ANDROID ==============================
    Dipanggil dari pembungkus APK. Balikin true kalau back sudah "dipakai" di sini,
@@ -1744,6 +2861,9 @@ window.__androidBack = function(){
 };
 
 /* ============================== BOOT ============================== */
+/* Digambar dulu dari data lokal, baru modenya ditanyakan. Kalau urutannya
+   dibalik, layar kosong dulu selama peladen dijawab — dan di sinyal lambat itu
+   bisa beberapa detik penuh, di aplikasi yang gunanya justru cepat. */
 load();
 applyTheme();
 syncStoreBar();
@@ -1754,8 +2874,43 @@ renderCart();
 if(S.settings.landing){ showLanding(); }
 else{ showApp('kasir'); }
 
-// tampilkan peringatan storage sejak awal bila perlu
 if(!storageOK){ setTimeout(function(){ toast('Penyimpanan lokal diblokir browser — gunakan Cadangkan Data.','err'); }, 900); }
+
+/* Keluhan migrasi ditahan sampai sesudah boot: toast yang dipanggil dari load()
+   akan mencari #toasts sebelum sisa halaman sempat dirangkai. */
+if(bootNote){ setTimeout(function(){ toast(bootNote, 'err'); }, 1400); }
+
+function nyalakanMenuData(nyala){
+  $$('.hanya-server').forEach(function(b){ b.hidden = !nyala; });
+  /* Nav bawah punya jumlah kolom tetap; kalau tidak ikut diubah, tombol kelima
+     menumpuk keluar dari barisnya. */
+  $('#bnav').style.gridTemplateColumns = 'repeat(' + (nyala ? 5 : 4) + ',1fr)';
+  syncStoreBar();
+}
+
+/* Modenya ditanyakan sesudah layar sudah terisi. Di mode lokal tidak ada
+   permintaan jaringan sama sekali — APK yang memuat dari file:// bahkan tidak
+   mencobanya. */
+Gudang.kenali().then(function(hasil){
+  if(hasil.mode !== 'server') return;
+
+  nyalakanMenuData(true);
+
+  function tarikData(){
+    return Gudang.muat().then(function(){
+      applyTheme(); syncStoreBar(); renderCats(); renderGrid(); renderCart();
+      if(S.ui.view === 'produk')  renderProdukList();
+      if(S.ui.view === 'riwayat') renderRiwayat();
+      if(S.ui.view === 'atur')    renderAtur();
+    });
+  }
+
+  if(hasil.keadaan && hasil.keadaan.masuk) return tarikData();
+  return mintaMasuk();
+}).catch(function(e){
+  console.error(e);
+  toast('Gagal menghubungi peladen — memakai data di perangkat ini.','err');
+});
 
 })();
 </script>

@@ -1,0 +1,12 @@
+{
+  "name": "kasir-luxe-uji",
+  "private": true,
+  "description": "Uji peramban: mode offline (file://) dan mode server",
+  "scripts": {
+    "offline": "node offline.js",
+    "server": "node server.js",
+    "statis": "node statis.js",
+    "semua": "node offline.js && node statis.js && node server.js"
+  },
+  "devDependencies": { "playwright": "^1.56.1" }
+}

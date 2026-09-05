@@ -1,0 +1,18 @@
+{
+  "name": "kasir-luxe-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Peladen KASIR LUXE — Postgres, API, dan konsol SQL",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "migrasi": "node src/migrasi.js",
+    "uji": "node --test uji/*.uji.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  }
+}

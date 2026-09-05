@@ -21,3 +21,9 @@ CARA-AMBIL-DATA.md
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# ── peladen ────────────────────────────────────────────────────────────────
+# .env memuat SANDI_TOKO dan sambungan basis data sungguhan.
+.env
+server/.env
+node_modules/
