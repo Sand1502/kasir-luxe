@@ -1,0 +1,49 @@
+# Menjalankan KASIR LUXE mode server di komputer sendiri:
+#
+#   cp server/.env.contoh server/.env     # lalu isi SANDI_TOKO
+#   docker compose up
+#
+# Buka http://localhost:3000
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: kasir
+      POSTGRES_USER: kasir
+      # Sandi basis data tidak pernah keluar dari jaringan compose ini; port-nya
+      # sengaja TIDAK dipetakan ke luar. Kalau perlu menyambung dengan psql dari
+      # komputer sendiri, buka sementara lewat "docker compose port db 5432" —
+      # jangan dijadikan pemetaan tetap di berkas ini.
+      POSTGRES_PASSWORD: ${SANDI_DB:-kasir-lokal}
+    volumes:
+      - data-kasir:/var/lib/postgresql/data
+    healthcheck:
+      # Peladen menunggu sampai basis datanya benar-benar menerima sambungan.
+      # Tanpa ini, migrasi jalan sebelum Postgres siap dan gagal dengan pesan
+      # "connection refused" yang terlihat seperti salah setelan, padahal cuma
+      # kecepatan menyalakan.
+      test: ["CMD-SHELL", "pg_isready -U kasir -d kasir"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  peladen:
+    image: node:22-alpine
+    working_dir: /app/server
+    command: sh -c "npm install --omit=dev --no-audit --no-fund && node src/index.js"
+    environment:
+      DATABASE_URL: postgresql://kasir:${SANDI_DB:-kasir-lokal}@db:5432/kasir
+      SANDI_TOKO:      ${SANDI_TOKO:?SANDI_TOKO wajib diisi — lihat server/.env.contoh}
+      RAHASIA_SESI:    ${RAHASIA_SESI:-}
+      SANDI_PERAN_SQL: ${SANDI_PERAN_SQL:-}
+      PORT: "3000"
+    volumes:
+      - .:/app
+    ports:
+      - "${PORT_LUAR:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  data-kasir:

@@ -1,7 +1,17 @@
 # KASIR LUXE
 
-Aplikasi kasir (Point of Sale) **satu berkas HTML**. Jalan penuh tanpa internet,
-tanpa server, tanpa akun. Datanya tersimpan di perangkat pemakai sendiri.
+Aplikasi kasir (Point of Sale) dengan **dua mode**, satu berkas antarmuka yang sama.
+
+| mode | data disimpan di | butuh internet | untuk apa |
+|---|---|---|---|
+| **lokal** | `localStorage` peramban | tidak | satu HP, jalan penuh waktu sinyal mati, dibungkus jadi APK |
+| **server** | Postgres lewat `/api` | ya | dipakai bersama beberapa perangkat, plus menu **Data** untuk mengolah dengan SQL |
+
+Modenya **tidak disetel tangan**, melainkan disimpulkan dari cara halaman dibuka:
+dibuka dari berkas (`file://`, termasuk APK) → lokal; disajikan peladen (`http://`)
+→ server. Kalau modenya berupa setelan, cepat atau lambat ada yang menyalakan
+mode server di HP lalu membawanya ke tempat tanpa sinyal — dan kasirnya berhenti
+jualan justru di saat paling ramai.
 
 Dibuat untuk NABES · Naturagen Berkah Sejahtera.
 
@@ -14,7 +24,7 @@ Buka halamannya, selesai. Tidak ada yang perlu dipasang.
 - **Riwayat** — transaksi yang sudah lewat, lengkap dengan rinciannya
 - **Atur** — nama toko, format angka, dan **cadangan data**
 
-## Di mana datanya disimpan
+## Di mana datanya disimpan (mode lokal)
 
 Di `localStorage` peramban, dua kunci:
 
@@ -33,7 +43,7 @@ Karena itu tombol **Atur → Cadangkan ke file → Unduh** bukan pelengkap, tapi
 pengaman utama. Pakai secara rutin. Berkas `.json`-nya bisa dipulihkan lewat
 **Pulihkan dari file** di perangkat mana pun.
 
-## Versi skema & migrasi
+## Versi skema & migrasi (mode lokal)
 
 Aplikasi ini ditimpa utuh waktu diperbarui: pemakai menyalin HTML baru ke HP,
 membukanya, dan detik itu juga kode baru membaca data lama yang sudah ada.
@@ -64,12 +74,124 @@ dipulihkan, pemakai yang salah pencet di situ kehilangan penjualan sesudah
 migrasi — masalah yang sama dari arah sebaliknya. Diunduh dulu, diperiksa, baru
 masuk lewat **Pulihkan dari file** yang memang sudah minta konfirmasi.
 
+## Mode server
+
+### Menjalankan
+
+```bash
+cp server/.env.contoh server/.env     # lalu isi SANDI_TOKO
+docker compose up                     # buka http://localhost:3000
+```
+
+Tanpa Docker:
+
+```bash
+createdb kasir
+cd server && npm install
+DATABASE_URL=postgresql://…/kasir SANDI_TOKO=… npm run migrasi
+DATABASE_URL=postgresql://…/kasir SANDI_TOKO=… npm start
+```
+
+Peladen **menolak jalan tanpa `SANDI_TOKO`**. Kasir yang terbuka di internet
+tanpa kata sandi bukan kasir, melainkan basis data milik umum.
+
+### Menu Data — mengolah dengan SQL
+
+Menu **Data** hanya muncul di mode server. Isinya kotak SQL yang menerima kueri
+apa pun ke basis data toko, dengan tiga pengaman yang tidak bisa dilewati:
+
+**1. Kueri tulis WAJIB dipratinjau dulu.** `UPDATE`/`DELETE` tidak pernah langsung
+jalan. Kueri dijalankan sungguhan di basis data lalu **dibatalkan**, dan yang
+dilaporkan cuma jumlah baris yang akan terkena. Baru sesudah angkanya terlihat,
+tombol "Ya, simpan" muncul.
+
+Ini menjawab kesalahan yang paling mahal di kotak seperti ini: lupa `WHERE`.
+`UPDATE produk SET harga = 0` dan versi ber-`WHERE`-nya kelihatan mirip di layar
+kecil, tapi yang satu mengubah 4 baris dan yang lain 400. **Angkanya yang
+membedakan, bukan hurufnya.**
+
+**2. Bentuk basis data tidak bisa disentuh.** `DROP`, `ALTER`, `CREATE`, `TRUNCATE`
+selalu ditolak. Yang menolak bukan penyaringan teks di sisi Node melainkan hak
+akses peran `kasir_sql` di Postgres (lihat `server/migrasi/002_peran.sql`).
+
+Penyaringan teks harus benar **setiap kali** untuk bisa disebut aman, sementara
+SQL punya tak terhingga cara menuliskan hal yang sama — komentar di tengah kata
+kunci, kutip dolar, spasi tak terlihat. Satu celah, dan perlindungannya tidak ada
+artinya. Hak akses basis data tidak punya celah seperti itu.
+
+**3. Cadangan diambil sebelum menulis.** Setiap kueri yang benar-benar disimpan
+didahului salinan seluruh isi toko ke tabel `cadangan_otomatis` (20 terakhir
+disimpan). Kalau cadangannya gagal dibuat, kuerinya **tidak dijalankan** — seluruh
+alasan mode ini aman bertumpu pada adanya jalan pulang.
+
+Peran `kasir_sql` juga tidak diberi hak apa pun ke `jejak_sql` dan
+`cadangan_otomatis`: jejak yang bisa dihapus dari kotak yang sama dengan yang
+dijejaki bukan jejak, dan cadangan yang bisa dihapus oleh kueri yang seharusnya
+dilindunginya bukan cadangan.
+
+### Repositori ini publik — apakah data toko ikut terbuka?
+
+**Tidak.** Yang publik adalah *kodenya*, bukan datanya. Orang yang membuka
+GitHub bisa membaca cara aplikasi ini bekerja, tapi itu tidak memberinya jalan
+masuk ke basis data toko mana pun — sama seperti mengetahui merek gembok tidak
+memberi orang kuncinya.
+
+Yang menjaga pintu ada di luar repositori:
+
+| | tempatnya | ikut ke GitHub? |
+|---|---|---|
+| `SANDI_TOKO` | `server/.env` | **tidak** — ada di `.gitignore` |
+| `RAHASIA_SESI` | `server/.env` | **tidak** |
+| sandi basis data | `server/.env` | **tidak** |
+| `server/.env.contoh` | repositori | ya, tapi isinya cuma nilai contoh |
+
+Karena `.env.contoh` ikut terbaca umum, peladen **menolak menyala** kalau
+`SANDI_TOKO` masih berisi nilai contoh dari berkas itu, atau kurang dari 10
+huruf. Peringatan di log tidak cukup: itu hal pertama yang tidak dibaca orang,
+dan pintu yang sandinya tertulis di internet tidak terlihat berbeda dari pintu
+yang aman.
+
+Sisanya yang tetap perlu diurus sendiri:
+
+- **Jangan pernah `git add` berkas `.env`.** Sudah dijaga `.gitignore`, tapi
+  `git add -f` tetap bisa menembusnya.
+- **Periksa pull request sebelum digabung.** Siapa pun boleh mengirim perubahan
+  ke repositori publik. Yang berbahaya bukan mereka membaca kode ini, melainkan
+  kode kiriman mereka ikut terpasang di peladen tanpa dibaca dulu.
+- **Kalau sandinya pernah bocor, ganti `SANDI_TOKO` lalu nyalakan ulang.**
+  Semua sesi yang sedang berjalan ikut gugur.
+
+### Pindah dari mode lokal ke server
+
+Di HP: **Atur → Cadangkan ke file → Unduh**. Lalu di aplikasi mode server:
+**Atur → Pulihkan dari file**. Bentuk cadangan lama diterima apa adanya —
+tidak perlu menyunting JSON dengan tangan. Riwayat penjualan lama ikut
+tersambung kembali ke produk yang baru dibuat.
+
+### Tabel yang tersedia
+
+`produk`, `transaksi`, `transaksi_item`, `toko`, plus tiga tampilan siap pakai:
+`penjualan_harian`, `produk_terlaris`, `stok_menipis`. Nama tabel dan kolomnya
+berbahasa Indonesia karena yang mengetik SQL-nya adalah pemilik toko, bukan kode.
+
 ## Isi gudang ini
 
 | berkas | apa |
 |---|---|
-| `index.html` | halaman yang disajikan — **salinan persis**, jangan disunting langsung |
+| `index.html` | antarmuka — satu berkas, dua mode. **Salinan persis**, jangan disunting langsung |
 | `sinkron.sh` | menyalin sumbernya jadi `index.html` lalu membuktikan keduanya identik |
+| `server/` | peladen Node + Postgres: API, konsol SQL, migrasi |
+| `uji/` | uji peramban — `node uji/offline.js` dan `node uji/server.js` |
+| `docker-compose.yml` | menjalankan mode server di komputer sendiri |
+
+## Menjalankan uji
+
+```bash
+cd server && npm run uji     # 30 uji API terhadap Postgres sungguhan
+cd uji && npm install && npm run semua   # 82 uji mode lokal + 33 uji mode server
+```
+
+Uji peramban butuh Postgres di `localhost:5433` (lihat berkasnya untuk sambungan).
 
 ## ⚠️ SATU SUMBER, SATU ARAH
 
