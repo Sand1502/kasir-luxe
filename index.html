@@ -1421,7 +1421,7 @@ function daykey(ts){ var d = new Date(ts); return d.getFullYear()+'-'+pad(d.getM
    Yang naik versi adalah SCHEMA di dalam isinya, bukan nama kuncinya. */
 var LS  = 'kasirluxe.v1';
 var LSB = 'kasirluxe.v1.bak';   // salinan mentah sebelum migrasi terakhir
-var SCHEMA = 2;
+var SCHEMA = 3;
 var storageOK = true;
 var bootNote = '';              // keluhan migrasi, ditampilkan sesudah boot
 
@@ -1646,6 +1646,47 @@ var MIGRATIONS = {
         stock: bebas ? null : Math.max(0, Math.round(Number(st)))
       });
     }).filter(function(p){ return p.name !== ''; });
+    return d;
+  },
+
+  /* v2 -> v3
+     Katalog contoh 13 barang diganti katalog toko sungguhan (169 barang).
+
+     Kenapa perlu langkah migrasi, bukan cukup mengganti SEED: SEED hanya
+     dipakai waktu penyimpanan benar-benar KOSONG. Perangkat yang sudah pernah
+     membuka aplikasi ini sekali saja sudah menyimpan 13 contoh itu, dan sejak
+     itu SEED tidak pernah dibaca lagi. Dari layar, memperbarui katalog terlihat
+     seperti tidak terjadi apa-apa — persis yang dilaporkan pemilik.
+
+     ⛔ PAGARNYA: penggantian HANYA dilakukan kalau katalognya masih PERAWAN —
+     tepat 13 barang, semuanya bernama sama persis dengan contoh bawaan, dan
+     BELUM ADA satu pun transaksi. Kalau ada satu saja barang tambahan, satu
+     harga yang sudah diubah, atau satu penjualan tercatat, katalognya
+     ditinggalkan apa adanya.
+
+     Alasannya sederhana: memperbaiki katalog contoh yang belum disentuh itu
+     menolong; menimpa daftar barang yang sudah disusun orang dengan tangan
+     selama berhari-hari itu merusak, tidak bisa dibatalkan, dan baru ketahuan
+     waktu dia sedang melayani pembeli. Kalau ragu, JANGAN sentuh. */
+  3: function(d){
+    var CONTOH_LAMA = ['Beras Premium 5 kg','Minyak Goreng 2 L','Gula Pasir 1 kg',
+      'Telur Ayam 1 kg','Pupuk NPK 1 kg','Pupuk Urea 1 kg','Benih Cabai Rawit',
+      'Polybag 25×25 (50 pcs)','Kopi Sachet Renceng','Air Mineral 600 ml',
+      'Teh Botol 450 ml','Sabun Mandi Batang','Deterjen Bubuk 800 g'];
+
+    var pr = Array.isArray(d.products) ? d.products : [];
+    var trx = Array.isArray(d.trx) ? d.trx : [];
+
+    var perawan = trx.length === 0 && pr.length === CONTOH_LAMA.length &&
+      pr.every(function(p){
+        return p && CONTOH_LAMA.indexOf(String(p.name || '').trim()) !== -1;
+      });
+
+    if(perawan){
+      d.products = seedProducts();
+      bootNote = 'Katalog contoh diganti dengan ' + d.products.length +
+                 ' produk toko. Data lama bisa diunduh di menu Atur.';
+    }
     return d;
   }
 };
