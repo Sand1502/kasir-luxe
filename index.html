@@ -153,14 +153,96 @@ p{margin:0}
 
 .field{display:block;margin-bottom:14px}
 .field__lbl{display:block;font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);margin-bottom:7px}
+/* ── KOLOM ISIAN: GARIS HIAS DI KEDUA PINGGIR ────────────────────────────
+   Permintaan pemilik (5/9/2026): "gua ga mau biasa biasa, ada garis garis
+   abstrak dipinggirnya yang elegan".
+
+   Hiasannya ditaruh di PINGGIR KIRI dan KANAN, bukan di sekeliling kotaknya.
+   Alasannya bukan selera: yang dibaca orang di kolom isian adalah tulisannya,
+   dan hiasan yang mengelilingi tulisan selalu ikut terbaca lebih dulu. Di
+   pinggir, hiasannya membingkai tanpa ikut dibaca.
+
+   Semua hiasan memakai pseudo-element pada .field-nya, BUKAN pada <input>.
+   Elemen <input> tidak bisa punya ::before/::after sama sekali - itu bukan
+   pilihan gaya, itu aturan yang tidak bisa dilanggar. */
 .input{
   width:100%;min-height:48px;padding:12px 14px;border-radius:12px;
-  background:var(--surface2);border:1px solid var(--line);color:var(--txt);
-  transition:border-color .18s,background .18s;
+  background:
+    linear-gradient(var(--surface2),var(--surface2)) padding-box,
+    linear-gradient(135deg,
+      rgba(176,110,255,.34) 0%,
+      rgba(176,110,255,.06) 38%,
+      rgba(176,110,255,.06) 62%,
+      rgba(176,110,255,.34) 100%) border-box;
+  border:1px solid transparent;color:var(--txt);
+  transition:box-shadow .22s, background .22s, transform .22s;
 }
-.input:focus{outline:none;border-color:var(--gold);background:var(--surface3)}
+.input:focus{
+  outline:none;
+  background:
+    linear-gradient(var(--surface3),var(--surface3)) padding-box,
+    linear-gradient(135deg,
+      var(--aksen) 0%,
+      rgba(176,110,255,.30) 45%,
+      rgba(176,110,255,.30) 55%,
+      var(--aksen) 100%) border-box;
+  box-shadow:0 0 0 3px rgba(176,110,255,.13), var(--nyala);
+}
 .input::placeholder{color:var(--txt3)}
 textarea.input{min-height:74px;resize:vertical}
+
+/* Garis hias: sepasang rusuk tipis di kiri dan kanan, plus satu titik kecil
+   di tengah tiap rusuk. Diam-diam saja sampai kolomnya disentuh - hiasan yang
+   sudah menyala sebelum dipakai tidak menandai apa pun. */
+.field{position:relative}
+/* Tiap sisi punya DUA garis, bukan satu: rusuk bersudut di luar, dan satu
+   hairline lurus di dalamnya yang meredup di kedua ujungnya. Dua garis dengan
+   watak berbeda - satu bersudut, satu lurus memudar - itulah yang membuatnya
+   terbaca sebagai hiasan, bukan sebagai kotak yang kurang jadi. */
+.field::before,.field::after{
+  content:"";position:absolute;top:30px;bottom:2px;width:9px;
+  pointer-events:none;opacity:.5;transition:opacity .25s, transform .25s;
+  background-repeat:no-repeat;background-size:1px 100%;
+  background-image:linear-gradient(180deg,
+    transparent 0%, var(--line2) 22%, var(--line2) 78%, transparent 100%);
+}
+.field::before{
+  left:-13px;
+  border-left:1px solid var(--line2);
+  border-top:1px solid var(--line2);
+  border-bottom:1px solid var(--line2);
+  border-radius:6px 0 0 6px;
+  background-position:5px 0;
+}
+.field::after{
+  right:-13px;
+  border-right:1px solid var(--line2);
+  border-top:1px solid var(--line2);
+  border-bottom:1px solid var(--line2);
+  border-radius:0 6px 6px 0;
+  background-position:3px 0;
+}
+.field:focus-within::before,.field:focus-within::after{
+  background-image:linear-gradient(180deg,
+    transparent 0%, var(--aksen) 22%, var(--aksen) 78%, transparent 100%);
+}
+.field:focus-within::before{opacity:1;transform:translateX(-2px);border-color:var(--aksen);box-shadow:-2px 0 10px -4px rgba(176,110,255,.75)}
+.field:focus-within::after{opacity:1;transform:translateX(2px);border-color:var(--aksen);box-shadow:2px 0 10px -4px rgba(176,110,255,.75)}
+/* Di layar sempit rusuknya tidak muat di luar kotak dan akan terpotong tepi
+   layar. Lebih baik hilang sama sekali daripada tampil separuh. */
+@media(max-width:400px){ .field::before,.field::after{display:none} }
+
+.field__lbl{position:relative;display:flex;align-items:center;gap:9px}
+/* Garis tipis yang memanjang dari ujung tulisan label sampai habis lebarnya -
+   memberi kesan kop surat tanpa menambah satu elemen pun ke HTML. */
+.field__lbl::after{
+  content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,var(--line2),transparent);
+}
+.field:focus-within .field__lbl{color:var(--aksen)}
+.field:focus-within .field__lbl::after{
+  background:linear-gradient(90deg,var(--aksen),transparent);
+}
 .hint{font-size:12px;color:var(--txt3);margin-top:6px}
 
 .card-surface{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
@@ -1220,7 +1302,44 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
     <div class="sheet__foot" style="flex-wrap:wrap">
       <button class="btn" id="btnPrint" style="flex:1 1 130px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1.5"/></svg>Cetak</button>
       <button class="btn" id="btnShare" style="flex:1 1 130px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M12 16V3m0 0L8 7m4-4 4 4"/></svg>Salin/Bagikan</button>
+      <button class="btn" id="btnBt" style="flex:1 1 100%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10-5 5V2l5 5L7 17"/></svg>Printer Bluetooth</button>
       <button class="btn btn--gold" id="btnDone" style="flex:1 1 100%">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ SHEET: PRINTER BLUETOOTH ══════════════════════ -->
+<div class="sheet" id="printerSheet">
+  <div class="sheet__scrim" data-close></div>
+  <div class="sheet__panel">
+    <div class="sheet__grab"></div>
+    <div class="sheet__head">
+      <div style="flex:1"><h3>Printer Bluetooth</h3><p>Pilih jalur yang cocok dengan printernya</p></div>
+      <button class="mini" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="sheet__body">
+      <div class="kecil" style="margin-bottom:6px;color:var(--txt2)">LEBAR KERTAS</div>
+      <div class="row" style="margin-bottom:16px">
+        <button class="btn pilihKertas" data-kertas="58">58 mm</button>
+        <button class="btn pilihKertas" data-kertas="80">80 mm</button>
+      </div>
+
+      <div class="kecil" style="margin-bottom:6px;color:var(--txt2)">JALUR CETAK</div>
+      <button class="btn" id="btnBle" style="width:100%;justify-content:flex-start;margin-bottom:8px">
+        Sambung langsung (BLE)
+      </button>
+      <p class="kecil" style="color:var(--txt3);margin:0 0 14px">Untuk printer <b>Bluetooth 4.0 ke atas</b>. Tanpa aplikasi tambahan. Butuh Chrome di Android.</p>
+
+      <button class="btn" id="btnRawbt" style="width:100%;justify-content:flex-start;margin-bottom:8px">
+        Lewat aplikasi RawBT
+      </button>
+      <p class="kecil" style="color:var(--txt3);margin:0 0 14px">Untuk printer <b>Bluetooth Classic / SPP</b> — jenis yang paling banyak dijual murah. Pasang dulu aplikasi <b>RawBT</b> dari Play Store.</p>
+
+      <div id="btKabar" class="kecil" style="padding:10px 12px;border-radius:10px;background:var(--surface3);color:var(--txt2);white-space:pre-line">Belum ada yang dicoba.</div>
+    </div>
+    <div class="sheet__foot" style="flex-wrap:wrap">
+      <button class="btn" id="btnUjiCetak" style="flex:1 1 100%">Cetak struk uji</button>
+      <button class="btn" data-close style="flex:1 1 100%">Tutup</button>
     </div>
   </div>
 </div>
@@ -1429,7 +1548,10 @@ var DEFAULTS = {
   store:'Toko Berkah Jaya',
   addr:'Jl. Raya Desa No. 12 · 0812-3456-7890',
   note:'Barang yang sudah dibeli\ntidak dapat ditukar kembali.',
-  currency:'Rp', decimals:true, landing:true, theme:'dark'
+  currency:'Rp', decimals:true, landing:true, theme:'dark',
+  /* Lebar kertas printer termal: 58mm (32 huruf) atau 80mm (48 huruf).
+     Bawaannya 58 karena itu yang paling banyak dipakai warung. */
+  kertas:58
 };
 
 var SEED = [
@@ -2584,8 +2706,13 @@ function receiptHTML(t){
     (t.note ? '<div class="rfoot">' + esc(t.note) + '</div>' : '') +
     '<div class="rthx">TERIMA KASIH</div>';
 }
-function receiptText(t){
-  var w = 32;
+/* Lebar struk mengikuti lebar kertas printer, bukan angka tetap.
+   58mm = 32 huruf, 80mm = 48 huruf pada huruf standar ESC/POS. Garis pemisah
+   dulu ditulis 32 setrip apa adanya; di kertas 80mm garis itu berhenti di
+   dua-pertiga baris dan strukna terlihat seperti salah cetak. */
+function receiptText(t, w){
+  w = Number(w) || 32;
+  var GARIS = new Array(w + 1).join('-');
   function row(a, b){
     a = String(a); b = String(b);
     var sp = Math.max(1, w - a.length - b.length);
@@ -2594,24 +2721,191 @@ function receiptText(t){
   var out = [];
   out.push((t.store || 'TOKO').toUpperCase());
   if(t.addr) out.push(t.addr);
-  out.push('--------------------------------');
+  out.push(GARIS);
   out.push(row(t.no, dstamp(t.ts)));
-  out.push('--------------------------------');
+  out.push(GARIS);
   t.items.forEach(function(it){
     out.push(it.name);
     out.push(row('  ' + num(it.price) + ' x ' + it.qty, num(it.sub)));
   });
-  out.push('--------------------------------');
+  out.push(GARIS);
   out.push(row('Jenis item', intf(t.lines)));
   out.push(row('Total barang', intf(t.qty) + ' pcs'));
   out.push(row('TOTAL', num(t.total)));
   out.push(row('Tunai', num(t.pay)));
   out.push(row('Kembali', num(t.change)));
-  out.push('--------------------------------');
+  out.push(GARIS);
   if(t.note) out.push(t.note);
   out.push('TERIMA KASIH');
   return out.join('\n');
 }
+
+/* ═══════════════════ PRINTER TERMAL BLUETOOTH (ESC/POS) ═══════════════════
+   Disiapkan sebelum printernya dibeli (permintaan pemilik 5/9/2026), dan itu
+   justru waktu yang tepat — karena JENIS printer menentukan jalur mana yang
+   bisa dipakai, dan itu keputusan belanja, bukan keputusan kode.
+
+   ⛔ KENYATAAN YANG TIDAK BISA DIAKALI: halaman web hanya bisa berbicara
+   dengan Bluetooth LE (GATT). Printer termal murah kebanyakan Bluetooth
+   Classic/SPP, dan peramban TIDAK diberi akses ke sana sama sekali. Tidak ada
+   susunan kode yang mengubah itu. Karena itu disiapkan TIGA jalur, supaya
+   printer apa pun yang akhirnya dibeli tetap ada jalannya:
+
+     1. BLE langsung   - printer Bluetooth 4.0+ , tanpa aplikasi tambahan
+     2. RawBT          - printer Classic/SPP, lewat aplikasi RawBT di Android
+     3. Cetak peramban - jalur lama, lewat layanan cetak Android
+
+   Yang menyatukan ketiganya: SATU pembangun bita ESC/POS. Kalau tiap jalur
+   menyusun struknya sendiri-sendiri, cepat atau lambat struk dari jalur yang
+   jarang dipakai berbeda diam-diam dari yang lain. */
+var Printer = (function(){
+  var ESC = 0x1B, GS = 0x1D;
+  var perangkat = null, karakteristik = null;
+
+  function lebarKolom(){ return (S.settings.kertas === 80) ? 48 : 32; }
+
+  /* Bita ESC/POS. Teksnya dipaksa ke ASCII lebih dulu: printer termal murah
+     memakai tabel huruf lama, dan huruf beraksen yang dikirim apa adanya
+     keluar sebagai simbol acak - satu nama barang bisa merusak seluruh baris. */
+  function keAscii(s){
+    return String(s == null ? '' : s)
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036F]/g, '')   /* tanda baca gabungan  */
+      .replace(/\u00D7/g, 'x')            /* tanda kali           */
+      .replace(/[\u2013\u2014]/g, '-')   /* setrip panjang       */
+      .replace(/[\u201C\u201D]/g, '"')   /* petik dua miring     */
+      .replace(/[\u2018\u2019]/g, "'")   /* petik satu miring    */
+      .replace(/[\u00B7\u2022]/g, '-')   /* titik tengah & bulat */
+      .replace(/\u00A0/g, ' ')            /* spasi tak terputus   */
+      .replace(/[^\x20-\x7E\n]/g, '?');
+  }
+
+  function bita(t){
+    var teks = keAscii(receiptText(t, lebarKolom()));
+    var kepala = [ESC, 0x40];                    // ESC @  - kembalikan ke awal
+    var isi = [];
+    var baris = teks.split('\n');
+
+    /* Baris pertama (nama toko) dicetak tebal dan di tengah. Sisanya rata kiri:
+       struk yang seluruhnya di tengah membuat kolom harga tidak sejajar, dan
+       kolom harga yang tidak sejajar adalah satu-satunya bagian struk yang
+       benar-benar dibaca orang. */
+    isi = isi.concat([ESC, 0x61, 0x01, ESC, 0x45, 0x01]);         // tengah + tebal
+    isi = isi.concat(Array.prototype.map.call(baris[0] || '', function(c){ return c.charCodeAt(0); }));
+    isi.push(0x0A);
+    isi = isi.concat([ESC, 0x45, 0x00, ESC, 0x61, 0x00]);          // normal + kiri
+
+    baris.slice(1).forEach(function(b){
+      isi = isi.concat(Array.prototype.map.call(b, function(c){ return c.charCodeAt(0); }));
+      isi.push(0x0A);
+    });
+
+    var kaki = [0x0A, 0x0A, 0x0A, 0x0A, GS, 0x56, 0x42, 0x00];     // maju lalu potong
+    return new Uint8Array(kepala.concat(isi).concat(kaki));
+  }
+
+  /* ── JALUR 1: BLE langsung ─────────────────────────────────────────────
+     UUID printer termal tidak seragam antar merek. Alih-alih menebak satu
+     daftar dan gagal diam-diam pada merek yang tidak terdaftar, seluruh
+     layanan pada perangkat disisir dan dicari ciri yang BISA DITULISI.
+     Menebak lebih rapi ditulis, tapi gagal pada printer yang tidak ada di
+     daftar - dan gagalnya tanpa sebab yang bisa dibaca pemakainya. */
+  var LAYANAN_DIKENAL = [
+    0x18f0, 0xff00, 0xffe0, 0xfee7, 0xff80,
+    '000018f0-0000-1000-8000-00805f9b34fb',
+    '0000ff00-0000-1000-8000-00805f9b34fb',
+    '49535343-fe7d-4ae5-8fa9-9fafd205e455'
+  ];
+
+  function adaBLE(){
+    return !!(navigator.bluetooth && navigator.bluetooth.requestDevice);
+  }
+
+  function sambung(){
+    if(!adaBLE()){
+      return Promise.reject(new Error('Peramban ini tidak punya Web Bluetooth. Pakai Chrome di Android, dan halaman harus dibuka lewat https.'));
+    }
+    if(karakteristik && perangkat && perangkat.gatt && perangkat.gatt.connected){
+      return Promise.resolve(karakteristik);
+    }
+    return navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: LAYANAN_DIKENAL
+    }).then(function(d){
+      perangkat = d;
+      d.addEventListener('gattserverdisconnected', function(){ karakteristik = null; });
+      return d.gatt.connect();
+    }).then(function(server){
+      return server.getPrimaryServices();
+    }).then(function(layanan){
+      var rantai = Promise.resolve(null);
+      layanan.forEach(function(sv){
+        rantai = rantai.then(function(dapat){
+          if(dapat) return dapat;
+          return sv.getCharacteristics().then(function(cs){
+            for(var i=0;i<cs.length;i++){
+              var c = cs[i];
+              if(c.properties.write || c.properties.writeWithoutResponse) return c;
+            }
+            return null;
+          }).catch(function(){ return null; });
+        });
+      });
+      return rantai;
+    }).then(function(c){
+      if(!c) throw new Error('Perangkat tersambung, tapi tidak ada jalur tulis yang ditemukan. Kemungkinan besar printernya Bluetooth Classic/SPP, bukan BLE — pakai jalur RawBT.');
+      karakteristik = c;
+      return c;
+    });
+  }
+
+  /* Ditulis sepotong-sepotong. Satu paket BLE bawaan cuma 20 bita; mengirim
+     struk utuh sekaligus membuat sebagian printer memotong cetakan di tengah
+     tanpa melaporkan galat apa pun - struknya keluar separuh dan terlihat
+     seperti kertasnya habis. */
+  function tulisBertahap(c, data){
+    var POTONG = 180, i = 0;
+    function lanjut(){
+      if(i >= data.length) return Promise.resolve();
+      var bagian = data.slice(i, i + POTONG);
+      i += POTONG;
+      var kirim = c.properties.writeWithoutResponse && c.writeValueWithoutResponse
+        ? c.writeValueWithoutResponse(bagian) : c.writeValue(bagian);
+      return kirim.then(function(){
+        return new Promise(function(r){ setTimeout(r, 24); });
+      }).then(lanjut);
+    }
+    return lanjut();
+  }
+
+  /* ── JALUR 2: RawBT (printer Classic/SPP) ───────────────────────────── */
+  function lewatRawBT(data){
+    var b = '';
+    for(var i=0;i<data.length;i++) b += String.fromCharCode(data[i]);
+    window.location.href = 'rawbt:base64,' + btoa(b);
+  }
+
+  return {
+    adaBLE: adaBLE,
+    lebarKolom: lebarKolom,
+    bita: bita,
+    teksUji: function(){
+      return { store:S.settings.store, addr:S.settings.addr, no:'UJI-PRINTER',
+        ts:Date.now(), items:[{name:'Uji cetak',price:1000,qty:1,sub:1000}],
+        lines:1, qty:1, total:1000, pay:1000, change:0, note:S.settings.note };
+    },
+    cetakBLE: function(t){
+      var data = bita(t);
+      return sambung().then(function(c){ return tulisBertahap(c, data); });
+    },
+    cetakRawBT: function(t){ lewatRawBT(bita(t)); },
+    namaPerangkat: function(){ return perangkat ? (perangkat.name || 'tanpa nama') : null; },
+    putus: function(){
+      try{ if(perangkat && perangkat.gatt && perangkat.gatt.connected) perangkat.gatt.disconnect(); }catch(e){}
+      perangkat = null; karakteristik = null;
+    }
+  };
+})();
 function showReceipt(t){
   lastTrx = t;
   $('#rcMeta').textContent = t.no + ' · ' + dstamp(t.ts);
@@ -2627,6 +2921,60 @@ $('#btnPrint').addEventListener('click', function(){
   if(b && b.print){ try{ b.print(); return; }catch(e){} }
   window.print();
 });
+/* ── kendali lembar printer ─────────────────────────────────────────────
+   Kabar keberhasilan/kegagalan ditulis ke kotak di dalam lembarnya, BUKAN ke
+   toast yang lewat sebentar. Menyiapkan printer adalah pekerjaan coba-coba:
+   pesan galat yang menghilang sesudah tiga detik memaksa orang mengulang
+   percobaannya cuma untuk membaca ulang alasannya. */
+function btKabar(pesan){ var e = $('#btKabar'); if(e) e.textContent = pesan; }
+
+function gambarPilihanKertas(){
+  Array.prototype.forEach.call(document.querySelectorAll('.pilihKertas'), function(b){
+    var aktif = Number(b.getAttribute('data-kertas')) === Number(S.settings.kertas || 58);
+    b.classList.toggle('btn--gold', aktif);
+  });
+}
+Array.prototype.forEach.call(document.querySelectorAll('.pilihKertas'), function(b){
+  b.addEventListener('click', function(){
+    S.settings.kertas = Number(b.getAttribute('data-kertas'));
+    if(Gudang.diServer()) simpanNanti(); else save();
+    gambarPilihanKertas();
+    btKabar('Lebar kertas: ' + S.settings.kertas + ' mm (' + Printer.lebarKolom() + ' huruf per baris).');
+  });
+});
+
+$('#btnBt').addEventListener('click', function(){
+  gambarPilihanKertas();
+  btKabar(Printer.adaBLE()
+    ? 'Siap. Pilih jalur di atas.'
+    : 'Peramban ini tidak punya Web Bluetooth, jadi jalur BLE tidak bisa dipakai di sini. Pakai Chrome di Android, atau jalur RawBT.');
+  openSheet('#printerSheet');
+});
+
+function strukUntukCetak(){ return lastTrx || Printer.teksUji(); }
+
+$('#btnBle').addEventListener('click', function(){
+  btKabar('Mencari printer… pilih perangkatnya di daftar yang muncul.');
+  Printer.cetakBLE(strukUntukCetak()).then(function(){
+    btKabar('Terkirim ke ' + (Printer.namaPerangkat() || 'printer') + '.\nKalau kertasnya tidak keluar, coba ganti lebar kertas lalu ulangi.');
+  }).catch(function(e){
+    btKabar('Gagal: ' + (e && e.message ? e.message : e) +
+      '\n\nKalau tulisannya soal jalur tulis atau perangkat tidak ketemu, printernya kemungkinan Bluetooth Classic/SPP — pakai jalur RawBT.');
+  });
+});
+
+$('#btnRawbt').addEventListener('click', function(){
+  try{
+    Printer.cetakRawBT(strukUntukCetak());
+    btKabar('Struk dikirim ke RawBT.\nKalau tidak ada yang terbuka, aplikasi RawBT belum terpasang — pasang dulu dari Play Store.');
+  }catch(e){ btKabar('Gagal memanggil RawBT: ' + e.message); }
+});
+
+$('#btnUjiCetak').addEventListener('click', function(){
+  var t = Printer.teksUji();
+  btKabar('Struk uji (' + Printer.lebarKolom() + ' huruf):\n\n' + receiptText(t, Printer.lebarKolom()));
+});
+
 $('#btnShare').addEventListener('click', function(){
   if(!lastTrx) return;
   var txt = receiptText(lastTrx);
