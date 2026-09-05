@@ -74,6 +74,30 @@ dipulihkan, pemakai yang salah pencet di situ kehilangan penjualan sesudah
 migrasi — masalah yang sama dari arah sebaliknya. Diunduh dulu, diperiksa, baru
 masuk lewat **Pulihkan dari file** yang memang sudah minta konfirmasi.
 
+## Cara membukanya
+
+Tiga jalan, dari yang paling cepat:
+
+| cara | dapat apa | mode |
+|---|---|---|
+| **Sajikan sebagai berkas statis** (GitHub Pages, atau peladen statis apa pun) | tautan yang bisa dibuka di HP mana pun | lokal |
+| **Salin `index.html` ke HP** → buka pakai Chrome → titik tiga → **Tambahkan ke layar utama** | ikon seperti aplikasi biasa, jalan tanpa sinyal | lokal |
+| **`docker compose up`** | data dipakai bersama + menu **Data** untuk SQL | server |
+
+Disajikan statis, `index.html` tetap mencoba menghubungi `/api` lalu **mendarat
+mulus ke mode lokal** waktu tidak menemukannya — menu Data tidak muncul, dan
+datanya tinggal di peramban masing-masing pengunjung. Dibuktikan di
+`uji/statis.js`; halaman yang macet karena menunggu peladen yang tidak pernah
+ada adalah kegagalan yang tidak menampilkan galat apa pun.
+
+Karena itu, menyajikannya lewat GitHub Pages **tidak membocorkan data toko**:
+halamannya tidak membawa data sama sekali, tiap pengunjung dapat salinan kosong
+di peramban sendiri.
+
+**Belum ada APK di gudang ini.** Perakitnya (`KASIR/android/build.sh`) ada di
+repositori kerja NABES, bukan di sini. Cara kedua di tabel atas memberi hasil
+yang praktis sama tanpa merakit apa pun.
+
 ## Mode server
 
 ### Menjalankan
