@@ -9,14 +9,21 @@ Dibuat untuk NABES · Naturagen Berkah Sejahtera.
 
 Buka halamannya, selesai. Tidak ada yang perlu dipasang.
 
-- **Kasir** — ketuk barang, jumlahnya nambah, uang pembeli masuk lewat keypad, kembalian dihitung
+- **Kasir** — ketuk barang, jumlahnya nambah, uang pembeli masuk lewat keypad, kembalian dihitung. Tiap ketukan dijawab: kartunya berdenyut, HP bergetar pendek, dan muncul keping kecil yang menyebut barang apa yang barusan masuk dan jadi berapa — lengkap dengan tombol **Urungkan**
 - **Produk** — daftar barang sendiri: tambah, ubah, hapus
 - **Riwayat** — transaksi yang sudah lewat, lengkap dengan rinciannya
 - **Atur** — nama toko, format angka, dan **cadangan data**
 
 ## Di mana datanya disimpan
 
-Di `localStorage` peramban, kunci `kasirluxe.v1`. Artinya:
+Di `localStorage` peramban, dua kunci:
+
+| kunci | isi |
+|---|---|
+| `kasirluxe.v1` | data yang dipakai — produk, riwayat, pengaturan |
+| `kasirluxe.v1.bak` | salinan mentah sebelum perubahan besar terakhir (lihat bawah) |
+
+Artinya:
 
 - **Tidak pernah dikirim ke mana pun.** Tidak ada server, tidak ada akun, tidak ada pelacak.
 - **Terikat ke satu peramban di satu perangkat.** Buka di HP lain = data kosong.
@@ -25,6 +32,37 @@ Di `localStorage` peramban, kunci `kasirluxe.v1`. Artinya:
 Karena itu tombol **Atur → Cadangkan ke file → Unduh** bukan pelengkap, tapi
 pengaman utama. Pakai secara rutin. Berkas `.json`-nya bisa dipulihkan lewat
 **Pulihkan dari file** di perangkat mana pun.
+
+## Versi skema & migrasi
+
+Aplikasi ini ditimpa utuh waktu diperbarui: pemakai menyalin HTML baru ke HP,
+membukanya, dan detik itu juga kode baru membaca data lama yang sudah ada.
+Tidak ada server yang sempat merapikan datanya lebih dulu. Jadi bentuk data
+punya nomor sendiri — `schema` — dan kode baru wajib bisa membaca bentuk lama
+lalu mengubahnya sendiri saat dibuka.
+
+Yang berlaku sekarang: **skema v2**. Nomornya tampil di **Atur → Cadangan**.
+
+Aturan waktu menambah `MIGRATIONS[n]` baru di `index.html`:
+
+1. **Jangan pernah ganti nama kunci `kasirluxe.v1`.** Mengganti nama kunci sama
+   saja dengan menghapus data toko — tanpa galat, tanpa peringatan, cuma "kok
+   produknya balik ke contoh semua".
+2. **Satu langkah per kenaikan versi, maju saja.** Tidak ada jalan mundur.
+3. **Jangan buang kolom yang tidak dikenali.** Pemakai yang sempat membuka versi
+   lebih baru menaruh sesuatu di situ.
+4. **Uji dengan data bentuk lama, bukan data bersih.** Kalau tidak, langkahnya
+   cuma terbukti jalan pada data yang memang sudah benar.
+
+Sebelum langkah pertama dijalankan, isi `kasirluxe.v1` disalin apa adanya ke
+`kasirluxe.v1.bak`. Salinan itu juga dibuat sebelum **Pulihkan** dan sebelum
+**Reset** — dua tombol yang paling gampang menghapus sehari penuh penjualan.
+Isinya bisa diambil lewat **Atur → Salinan sebelum pemutakhiran → Unduh**.
+
+Sengaja hanya bisa diunduh, bukan dipulihkan sekali ketuk: kalau langsung
+dipulihkan, pemakai yang salah pencet di situ kehilangan penjualan sesudah
+migrasi — masalah yang sama dari arah sebaliknya. Diunduh dulu, diperiksa, baru
+masuk lewat **Pulihkan dari file** yang memang sudah minta konfirmasi.
 
 ## Isi gudang ini
 

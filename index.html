@@ -51,7 +51,13 @@ body{
   font-size:15px; line-height:1.5; letter-spacing:-.005em;
   -webkit-font-smoothing:antialiased;
   -webkit-tap-highlight-color:transparent;
-  overflow-x:hidden;
+  /* JANGAN kembalikan jadi overflow-x:hidden di sini. Begitu overflow-x disetel
+     hidden sementara overflow-y masih visible, CSS memaksa overflow-y menjadi
+     auto — body berubah jadi wadah gulung tersendiri, dan semua anak
+     position:sticky (topbar dan bar cari) lalu menempel ke wadah yang tidak
+     pernah bergulung. Akibatnya sticky-nya diam-diam tidak bekerja sama sekali:
+     tidak ada galat, header cuma ikut hilang waktu digulung. Baris html,body
+     di atas sudah memakai overflow-x:clip yang menahan lebar tanpa efek itu. */
 }
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none}
@@ -230,7 +236,7 @@ textarea.input{min-height:74px;resize:vertical}
 
 /* ============================== APP SHELL ============================== */
 .app{min-height:100dvh;display:flex;flex-direction:column;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 74px)}
-@media(min-width:1080px){.app{padding-bottom:32px}}
+@media(min-width:900px){.app{padding-bottom:32px}}
 
 .topbar{
   position:sticky;top:0;z-index:40;
@@ -244,7 +250,7 @@ textarea.input{min-height:74px;resize:vertical}
 .topbar__store b{display:block;font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.02em}
 .topbar__store span{display:block;font-size:11px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tabs{display:none;gap:4px;background:var(--surface2);padding:4px;border-radius:13px;border:1px solid var(--line)}
-@media(min-width:1080px){.tabs{display:flex}}
+@media(min-width:900px){.tabs{display:flex}}
 .tabs button{display:flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:10px;font-size:13.5px;font-weight:650;color:var(--txt2)}
 .tabs button svg{width:16px;height:16px}
 .tabs button.is-on{background:var(--surface);color:var(--txt);box-shadow:var(--shadow-sm)}
@@ -267,7 +273,7 @@ textarea.input{min-height:74px;resize:vertical}
   backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);
   border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);
 }
-@media(min-width:1080px){.bottomnav{display:none}}
+@media(min-width:900px){.bottomnav{display:none}}
 .bottomnav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:var(--nav-h);color:var(--txt3);font-size:10.5px;font-weight:650;transition:.15s}
 .bottomnav button svg{width:21px;height:21px}
 .bottomnav button.is-on{color:var(--gold)}
@@ -275,46 +281,101 @@ textarea.input{min-height:74px;resize:vertical}
 
 /* ============================== KASIR VIEW ============================== */
 /* min-width:0 wajib — tanpa ini anak grid memakai lebar min-content dan
-   halaman bisa melar ke samping di mesin render yang lebih ketat (WebView). */
+   halaman bisa melar ke samping di mesin render yang lebih ketat (WebView).
+
+   Dua titik patah, masing-masing punya alasan sendiri:
+   900px  — keranjang berhenti jadi lembar tarik dan menempel sebagai kolom.
+            Tablet 10" dipegang mendatar ada di sini, dan di meja kasir tablet
+            justru bentuk yang paling sering dipakai; menyembunyikan keranjang
+            di balik satu ketukan pada layar selebar itu cuma memperlambat.
+   1180px — baru ada sisa ruang untuk rel kategori di kiri tanpa memeras kisi
+            produk jadi satu kolom. Di bawah itu kategori tetap berupa keping
+            yang bisa digeser mendatar. */
 .pos{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
 .pos>*{min-width:0}
-@media(min-width:1080px){.pos{grid-template-columns:minmax(0,1fr) 388px}}
+@media(min-width:900px){.pos{grid-template-columns:minmax(0,1fr) 372px}}
+@media(min-width:1180px){.pos{grid-template-columns:190px minmax(0,1fr) 380px}}
 
-.searchbar{position:relative;margin-bottom:12px}
+/* ---------- REL KATEGORI (≥1180px) ---------- */
+.rail{display:none;position:sticky;top:88px;flex-direction:column;gap:3px}
+@media(min-width:1180px){.rail{display:flex}}
+.rail button{
+  display:flex;align-items:center;gap:9px;width:100%;padding:10px 12px;border-radius:11px;
+  font-size:13.4px;font-weight:640;color:var(--txt2);text-align:left;transition:.15s;
+}
+.rail button:hover{background:var(--surface2);color:var(--txt)}
+.rail button.is-on{background:var(--goldsoft);color:var(--gold)}
+.rail button i{font-style:normal;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail button u{
+  text-decoration:none;font-size:11px;font-weight:750;color:var(--txt3);flex:0 0 auto;
+  background:var(--surface2);padding:2px 7px;border-radius:6px;font-variant-numeric:tabular-nums;
+}
+.rail button.is-on u{background:rgba(227,194,126,.18);color:var(--gold)}
+
+/* ---------- BAR CARI + KATEGORI ---------- */
+/* Menempel di bawah topbar supaya kasir bisa ganti kategori atau mencari tanpa
+   menggulung balik ke atas — di daftar 60 barang, gulungan itu yang bikin antre.
+   Latarnya sengaja hampir pekat: kartu produk yang lewat di belakangnya harus
+   tidak terbaca sama sekali, karena teks yang setengah tembus terlihat seperti
+   galat render, bukan seperti lapisan. */
+.posbar{
+  position:sticky;z-index:30;top:calc(66px + env(safe-area-inset-top));
+  margin:-18px -14px 12px;padding:14px 14px 0;
+  background:var(--bg);
+}
+@media(min-width:900px){.posbar{position:static;margin:0 0 12px;padding:0;background:none}}
+.searchbar{position:relative;margin-bottom:11px}
 .searchbar svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--txt3)}
 .searchbar .input{padding-left:42px}
 .cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none;-ms-overflow-style:none}
 .cats::-webkit-scrollbar{display:none}
+@media(min-width:1180px){.cats{display:none}}
 
-.pgrid{display:grid;gap:11px;grid-template-columns:repeat(2,1fr)}
+.pgrid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
 @media(min-width:560px){.pgrid{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:1080px){.pgrid{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:1320px){.pgrid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:900px){.pgrid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1240px){.pgrid{grid-template-columns:repeat(3,1fr)}}
 .pcard{
-  position:relative;display:flex;flex-direction:column;gap:3px;text-align:left;
-  padding:13px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);
+  position:relative;display:flex;flex-direction:column;gap:2px;text-align:left;
+  padding:10px 11px 13px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);
   transition:transform .12s ease,border-color .2s,background .2s;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
 }
-.pcard:active{transform:scale(.972)}
-.pcard.is-in{border-color:rgba(227,194,126,.42)}
-.pcard.is-out{opacity:.5}
+.pcard:active{transform:scale(.965)}
+/* Yang sudah masuk keranjang harus terbaca dari jauh, bukan cuma dari garis tepi.
+   Kasir memindai kisi ini sambil melayani orang — tidak sempat menatapnya. */
+.pcard.is-in{border-color:rgba(227,194,126,.5);background:linear-gradient(168deg,var(--goldsoft),var(--surface) 64%)}
+.pcard.is-out{opacity:.45}
+.pcard.is-out .pcard__ava{filter:grayscale(1)}
+/* Denyut sesudah diketuk: kartunya sendiri yang menjawab, jadi mata tidak perlu
+   pindah ke sudut layar dulu untuk tahu ketukannya kebaca. */
+.pcard.is-hit{animation:hit .5s ease-out}
+@keyframes hit{from{box-shadow:0 0 0 0 rgba(227,194,126,.5)}to{box-shadow:0 0 0 13px rgba(227,194,126,0)}}
 .pcard__ava{
-  width:100%;aspect-ratio:1.55/1;border-radius:11px;display:grid;place-items:center;
-  font-size:27px;margin-bottom:9px;
+  position:relative;width:100%;aspect-ratio:1.9/1;border-radius:12px;display:grid;place-items:center;
+  font-size:29px;margin-bottom:9px;
   background:hsl(var(--h) 42% 50% / .13);color:hsl(var(--h) 55% 66%);
   font-weight:800;letter-spacing:-.03em;
 }
 html[data-theme="light"] .pcard__ava{background:hsl(var(--h) 55% 46% / .12);color:hsl(var(--h) 48% 36%)}
-.pcard__n{font-size:13.2px;font-weight:640;line-height:1.32;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.64em}
-.pcard__c{font-size:10.5px;color:var(--txt3);font-weight:600;letter-spacing:.03em}
-.pcard__p{margin-top:5px;font-size:14px;font-weight:750;color:var(--gold);letter-spacing:-.02em}
-.pcard__s{font-size:10.5px;color:var(--txt3);margin-top:2px}
+.pcard__n{font-size:13.2px;font-weight:640;line-height:1.34;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.68em}
+.pcard__p{margin-top:5px;font-size:15px;font-weight:780;color:var(--gold);letter-spacing:-.03em}
+.pcard__c{font-size:10.4px;color:var(--txt3);font-weight:600;letter-spacing:.03em}
+/* Sisa stok ditempel di sudut gambar, bukan sebagai baris tersendiri: dia jarang
+   dibaca, tapi harus ada waktu dicari. Satu baris hemat ± 16px per kartu, dan
+   pada kisi 2 kolom itu setara satu baris kartu tambahan per layar. */
+.pcard__s{
+  position:absolute;left:7px;bottom:7px;font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:6px;background:rgba(10,12,15,.72);color:#C9D2DE;
+}
+html[data-theme="light"] .pcard__s{background:rgba(255,255,255,.86);color:#5A6472}
 .pcard__s.low{color:var(--warn)}
+.pcard__s.out{color:var(--danger)}
 .pcard__b{
-  position:absolute;top:9px;right:9px;min-width:24px;height:24px;padding:0 7px;border-radius:8px;
+  position:absolute;top:8px;right:8px;min-width:26px;height:26px;padding:0 8px;border-radius:9px;
   background:linear-gradient(150deg,var(--gold),var(--gold2));color:var(--ink);
-  display:grid;place-items:center;font-size:12px;font-weight:800;box-shadow:0 6px 14px -6px rgba(0,0,0,.6);
-  animation:pop .22s cubic-bezier(.2,1.4,.4,1);
+  display:grid;place-items:center;font-size:12.5px;font-weight:800;box-shadow:0 6px 14px -6px rgba(0,0,0,.6);
+  animation:pop .26s cubic-bezier(.2,1.5,.4,1);
 }
 @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
 
@@ -328,16 +389,16 @@ html[data-theme="light"] .pcard__ava{background:hsl(var(--h) 55% 46% / .12);colo
   padding-bottom:env(safe-area-inset-bottom);
 }
 .cart.open{transform:translateY(0)}
-@media(min-width:1080px){
-  .cart{position:sticky;top:92px;transform:none;border-radius:var(--r);max-height:calc(100dvh - 124px);z-index:1}
+@media(min-width:900px){
+  .cart{position:sticky;top:88px;transform:none;border-radius:var(--r);max-height:calc(100dvh - 120px);z-index:1}
 }
 .cart__grab{width:42px;height:4px;border-radius:9px;background:var(--line2);margin:9px auto 0}
-@media(min-width:1080px){.cart__grab{display:none}}
+@media(min-width:900px){.cart__grab{display:none}}
 .cart__head{display:flex;align-items:center;gap:10px;padding:14px 16px 12px;border-bottom:1px solid var(--line)}
 .cart__head h3{font-size:16px;flex:1}
 .cart__count{font-size:11px;font-weight:750;color:var(--gold);background:var(--goldsoft);padding:4px 9px;border-radius:7px}
 .cart__body{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:6px 16px;min-height:110px}
-@media(min-width:1080px){.cart__body{max-height:44vh}}
+@media(min-width:900px){.cart__body{max-height:44vh}}
 
 .line{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid var(--line);align-items:flex-start}
 .line:last-child{border-bottom:0}
@@ -350,11 +411,14 @@ html[data-theme="light"] .line__ava{background:hsl(var(--h) 55% 46% / .12);color
 .line__calc b{color:var(--txt2);font-weight:700}
 .line__sub{font-size:14px;font-weight:750;text-align:right;letter-spacing:-.02em;white-space:nowrap}
 .line__right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:0 0 auto}
-.stepper{display:flex;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:2px}
-.stepper button{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--txt2);transition:.13s}
+/* Sasaran sentuh 34px. Tombol − dan + ini ditekan berulang-ulang dengan ibu jari
+   sambil tangan yang lain memegang barang; yang 30px sering meleset ke baris
+   sebelahnya, dan meleset di sini berarti jumlah barang salah. */
+.stepper{display:flex;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--line);border-radius:11px;padding:2px}
+.stepper button{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--txt2);transition:.13s}
 .stepper button:active{background:var(--surface3);transform:scale(.9)}
-.stepper button svg{width:15px;height:15px}
-.stepper b{min-width:28px;text-align:center;font-size:13.5px;font-weight:750;font-variant-numeric:tabular-nums}
+.stepper button svg{width:16px;height:16px}
+.stepper b{min-width:30px;text-align:center;font-size:14px;font-weight:750;font-variant-numeric:tabular-nums}
 .stepper .del{color:var(--danger)}
 
 .cart__foot{padding:14px 16px 16px;border-top:1px solid var(--line);background:var(--surface2);border-radius:0 0 var(--r) var(--r)}
@@ -366,18 +430,68 @@ html[data-theme="light"] .line__ava{background:hsl(var(--h) 55% 46% / .12);color
 
 .cartbar{
   position:fixed;left:10px;right:10px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);z-index:44;
-  display:flex;align-items:center;gap:12px;padding:11px 12px 11px 16px;border-radius:15px;
+  display:flex;align-items:center;gap:11px;padding:10px 11px 10px 13px;border-radius:16px;
   background:linear-gradient(150deg,var(--surface3),var(--surface));border:1px solid var(--line2);
   box-shadow:var(--shadow);transform:translateY(150%);transition:transform .28s cubic-bezier(.2,.85,.25,1);
 }
 .cartbar.show{transform:translateY(0)}
-@media(min-width:1080px){.cartbar{display:none}}
+@media(min-width:900px){.cartbar{display:none}}
+/* Tumpukan ikon barang. Bar ini dulu cuma memuat angka total, jadi satu-satunya
+   cara memastikan isi keranjang adalah membukanya — padahal yang ingin dicek
+   kasir biasanya cuma "tadi jadi kemasukan belum". Ikonnya menjawab itu tanpa
+   ketukan. Ditumpuk bertindihan supaya lebarnya tetap walau isinya delapan. */
+.cartbar__av{display:flex;flex:0 0 auto;align-items:center}
+.cartbar__av span{
+  width:32px;height:32px;border-radius:10px;display:grid;place-items:center;
+  font-size:14px;font-weight:800;flex:0 0 auto;
+  background:hsl(var(--h) 42% 50% / .2);color:hsl(var(--h) 55% 70%);
+  border:1.5px solid var(--surface3);margin-left:-10px;
+}
+html[data-theme="light"] .cartbar__av span{background:hsl(var(--h) 55% 46% / .16);color:hsl(var(--h) 48% 34%)}
+.cartbar__av span:first-child{margin-left:0}
+.cartbar__av span.more{background:var(--surface2);color:var(--txt3);font-size:11px}
 .cartbar__i{flex:1;min-width:0}
-.cartbar__i span{display:block;font-size:10.5px;color:var(--txt3);font-weight:700;letter-spacing:.08em}
-.cartbar__i b{display:block;font-size:18px;letter-spacing:-.04em;margin-top:1px}
+.cartbar__i span{display:block;font-size:10.5px;color:var(--txt3);font-weight:700;letter-spacing:.07em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cartbar__i b{display:block;font-size:17.5px;letter-spacing:-.04em;margin-top:1px}
 .scrim{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.62);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s}
 .scrim.show{opacity:1;pointer-events:auto}
-@media(min-width:1080px){.scrim{display:none}}
+@media(min-width:900px){.scrim{display:none}}
+
+/* ---------- FLASH "MASUK KERANJANG" ---------- */
+/* Muncul tepat sesudah sebuah produk diketuk. Ini bukan hiasan: di meja kasir
+   yang ramai, ketukan sering meleset atau terhitung dua kali, dan kesalahannya
+   baru ketahuan waktu total sudah terlanjur dibacakan ke pembeli. Karena itu
+   yang ditampilkan bukan kata "berhasil", melainkan APA yang barusan masuk dan
+   jadi berapa — plus satu jalan keluar sekali ketuk kalau ternyata salah.
+   Diletakkan di atas cartbar, bukan menimpanya: keduanya sering tampil bersama. */
+.flash{
+  position:fixed;z-index:70;left:10px;right:10px;
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 74px);
+  display:flex;align-items:center;gap:11px;padding:9px 9px 9px 12px;border-radius:15px;
+  background:var(--surface3);border:1px solid rgba(227,194,126,.34);box-shadow:var(--shadow);
+  opacity:0;transform:translateY(14px) scale(.97);pointer-events:none;
+  transition:opacity .18s,transform .26s cubic-bezier(.2,1.3,.35,1);
+}
+.flash.show{opacity:1;transform:none;pointer-events:auto}
+/* Di layar lebar keranjang sudah kelihatan di kolom kanan, jadi flash-nya
+   dipindah ke kiri bawah supaya tidak menutupi baris yang baru saja berubah. */
+@media(min-width:900px){.flash{left:22px;right:auto;bottom:22px;width:min(340px,calc(100vw - 44px))}}
+.flash__ava{
+  width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+  font-size:19px;font-weight:800;flex:0 0 auto;
+  background:hsl(var(--h) 42% 50% / .18);color:hsl(var(--h) 55% 68%);
+}
+html[data-theme="light"] .flash__ava{background:hsl(var(--h) 55% 46% / .14);color:hsl(var(--h) 48% 36%)}
+.flash.show .flash__ava{animation:pop .3s cubic-bezier(.2,1.5,.4,1)}
+.flash__b{flex:1;min-width:0}
+.flash__b b{display:block;font-size:13.4px;font-weight:660;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flash__b em{display:block;font-style:normal;font-size:11.8px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flash__b em i{font-style:normal;color:var(--gold);font-weight:750}
+.flash__u{
+  flex:0 0 auto;height:36px;padding:0 13px;border-radius:10px;font-size:12.5px;font-weight:700;
+  background:var(--surface);border:1px solid var(--line2);color:var(--txt2);transition:.13s;
+}
+.flash__u:active{transform:scale(.93);color:var(--danger)}
 
 /* ============================== SHEET / MODAL ============================== */
 .sheet{position:fixed;inset:0;z-index:90;display:none}
@@ -468,7 +582,7 @@ html[data-theme="light"] .line__ava{background:hsl(var(--h) 55% 46% / .12);color
 
 /* ============================== LISTS (produk/riwayat) ============================== */
 .list{display:flex;flex-direction:column;gap:9px;padding-bottom:78px}
-@media(min-width:1080px){.list{padding-bottom:16px}}
+@media(min-width:900px){.list{padding-bottom:16px}}
 .item{
   display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;
   background:var(--surface);border:1px solid var(--line);
@@ -508,7 +622,7 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
 }
 .fab:active{transform:scale(.95)}
 .fab svg{width:19px;height:19px}
-@media(min-width:1080px){.fab{bottom:24px;right:24px}}
+@media(min-width:900px){.fab{bottom:24px;right:24px}}
 
 .setgroup{margin-bottom:18px}
 .setgroup>h4{font-size:11.5px;font-weight:750;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3);margin-bottom:10px}
@@ -524,8 +638,8 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
 .switch.on::after{transform:translateX(20px);background:var(--gold)}
 
 /* ============================== TOAST & DIALOG ============================== */
-.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 86px);z-index:120;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:max-content;max-width:92vw}
-@media(min-width:1080px){.toasts{bottom:28px}}
+.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 138px);z-index:120;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:max-content;max-width:92vw}
+@media(min-width:900px){.toasts{bottom:28px}}
 .toast{
   display:flex;align-items:center;gap:9px;padding:11px 16px;border-radius:13px;
   background:var(--surface3);border:1px solid var(--line2);box-shadow:var(--shadow);
@@ -696,12 +810,15 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
     <!-- ── KASIR ── -->
     <section class="view" id="view-kasir">
       <div class="pos">
+        <aside class="rail" id="rail"></aside>
         <div>
-          <div class="searchbar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
-            <input class="input" id="q" type="search" placeholder="Cari barang…" autocomplete="off">
+          <div class="posbar">
+            <div class="searchbar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+              <input class="input" id="q" type="search" placeholder="Cari barang…" autocomplete="off">
+            </div>
+            <div class="cats" id="cats"></div>
           </div>
-          <div class="cats" id="cats"></div>
           <div class="pgrid" id="pgrid"></div>
         </div>
 
@@ -727,8 +844,9 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
 
       <div class="scrim" id="cartScrim"></div>
       <button class="cartbar" id="cartBar">
+        <span class="cartbar__av" id="cbAv"></span>
         <span class="cartbar__i" style="text-align:left"><span id="cbCount">0 item · 0 pcs</span><b class="money" id="cbTotal">Rp 0,00</b></span>
-        <span class="btn btn--gold" style="pointer-events:none">Lihat Keranjang</span>
+        <span class="btn btn--gold" style="pointer-events:none;flex:0 0 auto">Lihat</span>
       </button>
     </section>
 
@@ -796,6 +914,7 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
           <div class="togrow"><div class="togrow__b"><b>Cadangan lewat teks</b><span>Cara paling aman di HP — salin lalu kirim ke WhatsApp sendiri</span></div>
             <div style="display:flex;gap:6px;flex:0 0 auto"><button class="btn" id="btnCopyBk">Salin</button><button class="btn" id="btnPasteBk">Tempel</button></div>
           </div>
+          <div class="togrow" id="rowBak" hidden><div class="togrow__b"><b>Salinan sebelum pemutakhiran</b><span id="bakInfo">—</span></div><button class="btn" id="btnBak">Unduh</button></div>
           <div class="togrow"><div class="togrow__b"><b>Hapus semua data</b><span>Produk, riwayat, dan pengaturan</span></div><button class="btn btn--danger" id="btnReset">Reset</button></div>
         </div>
         <p class="hint" id="storageWarn" hidden></p>
@@ -947,6 +1066,13 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
   </div>
 </div>
 
+<!-- ══════════════════════════ FLASH: MASUK KERANJANG ══════════════════════════ -->
+<div class="flash" id="flash" role="status" aria-live="polite">
+  <span class="flash__ava" id="flAva"></span>
+  <span class="flash__b"><b id="flName">—</b><em id="flMeta">—</em></span>
+  <button class="flash__u" id="flUndo">Urungkan</button>
+</div>
+
 <div class="toasts" id="toasts"></div>
 
 <script>
@@ -962,6 +1088,18 @@ function bridge(){ try{ return window.AndroidBridge || null; }catch(e){ return n
 function round2(n){ n = Number(n)||0; return Math.round((n + Number.EPSILON) * 100) / 100; }
 function uid(){ return 'p' + Math.random().toString(36).slice(2,9) + (idSeed++); }
 var idSeed = 0;
+
+/* Sesudah migrasi v2, "stok tak dibatasi" cuma punya satu bentuk: null. Kedua
+   helper ini tetap memaklumi bentuk lama ('' dan undefined) karena berkas
+   cadangan lawas bisa dipulihkan kapan saja, bahkan yang disunting tangan. */
+function stokBebas(p){ return !p || p.stock === '' || p.stock == null || !isFinite(Number(p.stock)); }
+function stokAda(p){ return stokBebas(p) ? Infinity : Math.max(0, Number(p.stock) || 0); }
+
+/* Getar pendek sebagai tanda ketukan terbaca. Di HP Android murah, jeda gambar
+   bisa 100 ms lebih dan kasir sudah terlanjur mengetuk dua kali; getarnya sampai
+   duluan. Dibungkus try — sebagian WebView punya nama fungsinya tapi melemparkan
+   galat waktu dipanggil dari konteks tanpa izin. */
+function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 
 function decimals(){ return S.settings.decimals ? 2 : 0; }
 function num(n){
@@ -998,8 +1136,15 @@ function dstamp(ts){ var d = new Date(ts); return pad(d.getDate())+'/'+pad(d.get
 function daykey(ts){ var d = new Date(ts); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 
 /* ============================== STATE ============================== */
-var LS = 'kasirluxe.v1';
+/* Kunci ini TIDAK PERNAH berubah. Data toko yang sudah ada di HP pemakai
+   tersimpan di situ, dan mengganti namanya sama saja dengan menghapusnya —
+   tanpa galat, tanpa peringatan, cuma "kok produknya balik ke contoh semua".
+   Yang naik versi adalah SCHEMA di dalam isinya, bukan nama kuncinya. */
+var LS  = 'kasirluxe.v1';
+var LSB = 'kasirluxe.v1.bak';   // salinan mentah sebelum migrasi terakhir
+var SCHEMA = 2;
 var storageOK = true;
+var bootNote = '';              // keluhan migrasi, ditampilkan sesudah boot
 
 var DEFAULTS = {
   store:'Toko Berkah Jaya',
@@ -1029,29 +1174,132 @@ function seedProducts(){
   });
 }
 
-var S = { products:[], cart:[], trx:[], settings:{}, ui:{ view:'kasir', q:'', qp:'', cat:'Semua', editing:null, payStr:'0' } };
+var S = { schema:SCHEMA, products:[], cart:[], trx:[], settings:{}, ui:{ view:'kasir', q:'', qp:'', cat:'Semua', editing:null, payStr:'0' } };
+
+/* ============================== MIGRASI DATA ==============================
+   Aplikasi ini satu berkas yang ditimpa utuh waktu diperbarui: pemakai menyalin
+   HTML baru ke HP-nya, membukanya, dan detik itu juga kode baru membaca data
+   lama yang sudah ada di localStorage. Tidak ada server yang sempat merapikan
+   datanya lebih dulu, dan tidak ada tombol "batal" — begitu tersimpan, bentuk
+   lamanya hilang. Jadi kode baru WAJIB bisa membaca bentuk lama dan mengubahnya
+   sendiri saat dibuka.
+
+   Aturan mainnya:
+   - satu langkah per kenaikan versi, maju saja, tidak pernah mundur;
+   - jangan buang kolom yang tidak dikenali — versi lebih baru menaruh sesuatu
+     di situ, dan pemakai yang sempat membuka versi lama tidak boleh kehilangan;
+   - selalu sisakan salinan mentah sebelum langkah pertama dijalankan. */
+var MIGRATIONS = {
+  /* v1 -> v2
+     v1 menandai "stok tak dibatasi" dengan tiga bentuk berbeda: '', null, dan
+     kolomnya tidak ada sama sekali. Akibatnya tiap pembacaan stok harus mengecek
+     ketiganya, dan satu pengecekan yang terlewat membuat barang tanpa batas stok
+     dianggap habis — barangnya jadi tidak bisa dijual, dan sebabnya tidak
+     kelihatan dari layar mana pun. Diseragamkan ke null. */
+  2: function(d){
+    d.products = (Array.isArray(d.products) ? d.products : []).map(function(p){
+      p = (p && typeof p === 'object') ? p : {};
+      var st = p.stock;
+      var bebas = (st === '' || st == null || !isFinite(Number(st)));
+      // Object.assign menyalin dulu supaya kolom asing milik versi lain ikut lestari.
+      return Object.assign({}, p, {
+        id:    p.id || uid(),
+        name:  String(p.name == null ? '' : p.name).trim(),
+        cat:   String(p.cat || 'Lainnya').trim() || 'Lainnya',
+        emoji: String(p.emoji || ''),
+        price: round2(Number(p.price) || 0),
+        stock: bebas ? null : Math.max(0, Math.round(Number(st)))
+      });
+    }).filter(function(p){ return p.name !== ''; });
+    return d;
+  }
+};
+
+function snapshot(raw){
+  /* Bentuk mentah sebelum migrasi. Kalau langkah migrasinya ternyata keliru,
+     ini satu-satunya jalan pulang: tidak ada server, tidak ada riwayat versi. */
+  if(!raw) return;
+  try{ localStorage.setItem(LSB, raw); }catch(e){}
+}
+
+function migrate(d){
+  var from = Number(d.schema || d.v || 1) || 1;
+  if(from > SCHEMA){
+    /* Data dari versi yang lebih baru — biasanya cadangan dari HP yang sudah
+       diperbarui, dipulihkan ke HP yang belum. Jangan dipaksa turun versi:
+       menuliskannya kembali lewat kode lama akan memangkas kolom yang belum
+       dikenal di sini. Dipakai apa adanya, pemakainya diberi tahu. */
+    bootNote = 'Data ini dibuat versi aplikasi yang lebih baru. Perbarui aplikasinya supaya tidak ada yang terpangkas.';
+    return d;
+  }
+  for(var v = from + 1; v <= SCHEMA; v++){
+    if(!MIGRATIONS[v]) continue;
+    try{ d = MIGRATIONS[v](d) || d; }
+    catch(e){
+      bootNote = 'Sebagian data lama gagal disesuaikan (langkah v' + v + '). Salinan sebelum pemutakhiran masih tersimpan di menu Atur.';
+      break;
+    }
+  }
+  d.schema = SCHEMA;
+  return d;
+}
+
+/* Menerima sebongkah data (dari localStorage atau dari berkas cadangan) menjadi
+   keadaan aplikasi. Normalisasi ringan di sini disengaja rangkap dengan migrasi:
+   berkas cadangan bisa saja disunting tangan sebelum dipulihkan. */
+function adopt(d){
+  S.schema   = Number(d.schema) || SCHEMA;
+  S.products = Array.isArray(d.products) ? d.products : seedProducts();
+  S.trx      = Array.isArray(d.trx) ? d.trx : [];
+  S.settings = Object.assign({}, DEFAULTS, d.settings || {});
+  S.cart     = [];
+  S.products.forEach(function(p){
+    if(!p.id) p.id = uid();
+    p.price = round2(Number(p.price) || 0);
+    if(p.stock === '' || p.stock == null || !isFinite(Number(p.stock))) p.stock = null;
+  });
+}
 
 function load(){
   var raw = null;
   try{ raw = localStorage.getItem(LS); }
   catch(e){ storageOK = false; }
+
   var data = null;
   if(raw){ try{ data = JSON.parse(raw); }catch(e){ data = null; } }
-  if(data && typeof data === 'object'){
-    S.products = Array.isArray(data.products) ? data.products : seedProducts();
-    S.trx      = Array.isArray(data.trx) ? data.trx : [];
-    S.settings = Object.assign({}, DEFAULTS, data.settings || {});
-  }else{
-    S.products = seedProducts();
-    S.trx = [];
+
+  if(!data || typeof data !== 'object'){
+    /* Kosong, atau ada tapi tidak terbaca. Yang kedua tidak boleh ditimpa
+       diam-diam — simpan apa adanya dulu, siapa tahu masih bisa diselamatkan
+       dengan tangan lewat Unduh di menu Atur. */
+    if(raw){
+      snapshot(raw);
+      bootNote = 'Data tersimpan tidak terbaca, jadi aplikasi dimulai dari contoh. Salinan aslinya bisa diunduh di menu Atur.';
+    }
+    S.schema = SCHEMA; S.products = seedProducts(); S.trx = []; S.cart = [];
     S.settings = Object.assign({}, DEFAULTS);
+    return;
   }
-  S.products.forEach(function(p){ if(!p.id) p.id = uid(); p.price = Number(p.price)||0; });
+
+  var from = Number(data.schema || data.v || 1) || 1;
+  if(from < SCHEMA) snapshot(raw);   // hanya saat migrasi benar-benar jalan
+  adopt(migrate(data));
+
+  /* Hasilnya langsung ditulis balik, sekali, di sini. Kalau ditunda sampai
+     pemakai kebetulan mengubah sesuatu, data lama akan dimigrasi ulang setiap
+     kali aplikasi dibuka — dan karena snapshot() ikut jalan tiap kali, jaring
+     pengamannya tidak pernah benar-benar merekam satu titik waktu: dia terus
+     bergeser mengikuti pembukaan terakhir. Kasir yang cuma membuka aplikasi
+     lalu menutupnya lagi juga akan tetap menyimpan bentuk lama selamanya. */
+  if(from < SCHEMA) save();
 }
+
 function save(){
   if(!storageOK) return;
   try{
-    localStorage.setItem(LS, JSON.stringify({ products:S.products, trx:S.trx, settings:S.settings }));
+    localStorage.setItem(LS, JSON.stringify({
+      schema:S.schema, products:S.products, trx:S.trx, settings:S.settings
+    }));
   }catch(e){
     storageOK = false;
     toast('Penyimpanan browser diblokir — data tidak tersimpan permanen.','err');
@@ -1120,6 +1368,7 @@ $('#themeBtn').addEventListener('click', function(){
 /* ============================== NAVIGASI ============================== */
 function nav(view){
   S.ui.view = view;
+  hideFlash();
   ['kasir','produk','riwayat','atur'].forEach(function(v){
     var el = $('#view-' + v); if(el) el.hidden = (v !== view);
   });
@@ -1154,20 +1403,33 @@ function categories(){
   S.products.forEach(function(p){ var c = (p.cat||'Lainnya').trim() || 'Lainnya'; if(!set[c]){ set[c] = 1; out.push(c); } });
   return out;
 }
+function catCount(c){
+  if(c === 'Semua') return S.products.length;
+  return S.products.filter(function(p){ return (p.cat || 'Lainnya') === c; }).length;
+}
 function renderCats(){
   var cats = categories();
   if(cats.indexOf(S.ui.cat) === -1) S.ui.cat = 'Semua';
   $('#cats').innerHTML = cats.map(function(c){
     return '<button class="chip' + (c === S.ui.cat ? ' is-on' : '') + '" data-cat="' + esc(c) + '">' + esc(c) + '</button>';
   }).join('');
+  /* Rel kiri hanya tampil ≥1180px, tapi tetap digambar di semua ukuran: menunda
+     penggambaran sampai lebarnya cukup berarti harus mendengarkan resize juga,
+     dan isinya cuma beberapa baris teks. */
+  $('#rail').innerHTML = cats.map(function(c){
+    return '<button' + (c === S.ui.cat ? ' class="is-on"' : '') + ' data-cat="' + esc(c) + '">' +
+      '<i>' + esc(c) + '</i><u>' + intf(catCount(c)) + '</u></button>';
+  }).join('');
   // datalist untuk form
   $('#catList').innerHTML = cats.filter(function(c){ return c !== 'Semua'; })
     .map(function(c){ return '<option value="' + esc(c) + '">'; }).join('');
 }
-$('#cats').addEventListener('click', function(e){
+function pickCat(e){
   var b = e.target.closest('[data-cat]'); if(!b) return;
   S.ui.cat = b.getAttribute('data-cat'); renderCats(); renderGrid();
-});
+}
+$('#cats').addEventListener('click', pickCat);
+$('#rail').addEventListener('click', pickCat);
 $('#q').addEventListener('input', function(e){ S.ui.q = e.target.value.toLowerCase(); renderGrid(); });
 
 function inCart(id){ var l = S.cart.filter(function(x){ return x.id === id; })[0]; return l ? l.qty : 0; }
@@ -1187,19 +1449,18 @@ function renderGrid(){
   }
   $('#pgrid').innerHTML = rows.map(function(p){
     var n = inCart(p.id);
-    var hasStock = (p.stock !== '' && p.stock != null);
-    var left = hasStock ? (Number(p.stock) - n) : null;
-    var out = hasStock && left <= 0;
+    var bebas = stokBebas(p);
+    var left = bebas ? null : (stokAda(p) - n);
+    var out = !bebas && left <= 0;
     var ava = p.emoji ? esc(p.emoji) : esc(initials(p.name));
     return '<button class="pcard' + (n ? ' is-in' : '') + (out ? ' is-out' : '') + '" data-add="' + esc(p.id) + '" style="--h:' + hue(p.name) + '">' +
       (n ? '<span class="pcard__b">' + n + '</span>' : '') +
-      '<span class="pcard__ava">' + ava + '</span>' +
+      '<span class="pcard__ava">' + ava +
+        (bebas ? '' : '<span class="pcard__s' + (out ? ' out' : (left <= 5 ? ' low' : '')) + '">' + (out ? 'Habis' : 'Sisa ' + intf(left)) + '</span>') +
+      '</span>' +
       '<span class="pcard__n">' + esc(p.name) + '</span>' +
       '<span class="pcard__c">' + esc(p.cat || 'Lainnya') + '</span>' +
       '<span class="pcard__p money">' + esc(fmt(p.price)) + '</span>' +
-      (hasStock
-        ? '<span class="pcard__s' + (left <= 5 ? ' low' : '') + '">' + (out ? 'Stok habis' : 'Sisa ' + intf(left) + ' pcs') + '</span>'
-        : '<span class="pcard__s">Stok bebas</span>') +
     '</button>';
   }).join('');
 }
@@ -1214,21 +1475,69 @@ function addToCart(id){
   if(!p) return;
   var line = S.cart.filter(function(x){ return x.id === id; })[0];
   var have = line ? line.qty : 0;
-  var hasStock = (p.stock !== '' && p.stock != null);
-  if(hasStock && have >= Number(p.stock)){ toast('Stok "' + p.name + '" tinggal ' + intf(p.stock) + ' pcs.','err'); return; }
+  if(have >= stokAda(p)){ toast('Stok "' + p.name + '" tinggal ' + intf(stokAda(p)) + ' pcs.','err'); return; }
   if(line){ line.qty += 1; }
   else{ S.cart.push({ id:p.id, name:p.name, price:Number(p.price)||0, emoji:p.emoji||'', qty:1 }); }
   renderCart(); renderGrid();
+  buzz(11); pulseCard(p.id); showFlash(p);
 }
+
+/* ---------- UMPAN BALIK KETUKAN ----------
+   Tiga lapis, sengaja rangkap, karena masing-masing gagal di keadaan berbeda:
+   getar tidak terasa kalau HP ditaruh di meja, denyut kartu tidak terlihat kalau
+   mata sudah pindah ke pembeli, dan flash-nya terlewat kalau kasir mengetuk
+   beruntun. Yang penting salah satunya nyangkut. */
+function pulseCard(id){
+  /* Kisi digambar ulang tiap penambahan, jadi elemennya selalu baru — tapi
+     kelasnya tetap dicopot lalu dipasang lagi supaya benar juga andai suatu saat
+     penggambarannya dibuat tidak merusak simpul. Pencocokan lewat getAttribute,
+     bukan selektor beruntai: id produk bisa berasal dari berkas cadangan yang
+     disunting tangan, dan tanda kutip di dalamnya akan mematahkan selektor. */
+  var el = null;
+  $$('#pgrid [data-add]').some(function(b){
+    if(b.getAttribute('data-add') === id){ el = b; return true; }
+    return false;
+  });
+  if(!el) return;
+  el.classList.remove('is-hit');
+  void el.offsetWidth;              // paksa reflow supaya animasinya benar-benar diulang
+  el.classList.add('is-hit');
+}
+
+var flashTimer = null, flashId = null;
+function showFlash(p){
+  var line = S.cart.filter(function(x){ return x.id === p.id; })[0];
+  if(!line){ hideFlash(); return; }
+  flashId = p.id;
+  $('#flAva').style.setProperty('--h', hue(p.name));
+  $('#flAva').textContent = p.emoji ? p.emoji : initials(p.name);
+  $('#flName').textContent = p.name;
+  $('#flMeta').innerHTML = '<i>' + esc(intf(line.qty)) + ' pcs</i> · ' + esc(fmt(round2(line.price * line.qty)));
+  $('#flash').classList.add('show');
+  // Ketukan berikutnya menyetel ulang hitungan mundur, bukan menumpuk popup baru.
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(hideFlash, 2600);
+}
+function hideFlash(){
+  clearTimeout(flashTimer); flashTimer = null; flashId = null;
+  $('#flash').classList.remove('show');
+}
+$('#flUndo').addEventListener('click', function(){
+  if(!flashId) return;
+  var id = flashId;
+  var l = S.cart.filter(function(x){ return x.id === id; })[0];
+  hideFlash();
+  if(!l) return;
+  setQty(id, l.qty - 1);
+  toast(l.qty <= 1 ? '"' + l.name + '" dikeluarkan' : '"' + l.name + '" jadi ' + intf(l.qty - 1) + ' pcs', 'info');
+});
 function setQty(id, q){
   var line = S.cart.filter(function(x){ return x.id === id; })[0];
   if(!line) return;
   var p = S.products.filter(function(x){ return x.id === id; })[0];
   if(q <= 0){ S.cart = S.cart.filter(function(x){ return x.id !== id; }); }
   else{
-    if(p && p.stock !== '' && p.stock != null && q > Number(p.stock)){
-      toast('Stok maksimal ' + intf(p.stock) + ' pcs.','err'); return;
-    }
+    if(q > stokAda(p)){ toast('Stok maksimal ' + intf(stokAda(p)) + ' pcs.','err'); return; }
     line.qty = q;
   }
   renderCart(); renderGrid();
@@ -1273,6 +1582,13 @@ function renderCart(){
   $('#btnPay').disabled = !S.cart.length;
   $('#cbCount').textContent = intf(t.lines) + ' item · ' + intf(t.qty) + ' pcs';
   $('#cbTotal').textContent = fmt(t.total);
+  /* Lima ikon terakhir, sisanya jadi satu keping "+n". Batasnya bukan soal
+     tempat semata: tumpukan yang lebih panjang berhenti terbaca sebagai isi
+     dan mulai terbaca sebagai hiasan. */
+  var MAX = 5;
+  $('#cbAv').innerHTML = S.cart.slice(0, MAX).map(function(l){
+    return '<span style="--h:' + hue(l.name) + '">' + (l.emoji ? esc(l.emoji) : esc(initials(l.name))) + '</span>';
+  }).join('') + (S.cart.length > MAX ? '<span class="more">+' + intf(S.cart.length - MAX) + '</span>' : '');
   $('#cartBar').classList.toggle('show', t.lines > 0 && !$('#cartWrap').classList.contains('open'));
 }
 $('#cartBody').addEventListener('click', function(e){
@@ -1283,10 +1599,10 @@ $('#cartBody').addEventListener('click', function(e){
 $('#btnClearCart').addEventListener('click', function(){
   if(!S.cart.length) return;
   confirmDlg('Kosongkan keranjang?','Semua barang di keranjang akan dihapus. Transaksi belum tersimpan.','Ya, kosongkan').then(function(ok){
-    if(ok){ S.cart = []; renderCart(); renderGrid(); closeCart(); toast('Keranjang dikosongkan','info'); }
+    if(ok){ S.cart = []; hideFlash(); renderCart(); renderGrid(); closeCart(); toast('Keranjang dikosongkan','info'); }
   });
 });
-function openCart(){ $('#cartWrap').classList.add('open'); $('#cartScrim').classList.add('show'); $('#cartBar').classList.remove('show'); }
+function openCart(){ hideFlash(); $('#cartWrap').classList.add('open'); $('#cartScrim').classList.add('show'); $('#cartBar').classList.remove('show'); }
 function closeCart(){ $('#cartWrap').classList.remove('open'); $('#cartScrim').classList.remove('show'); renderCart(); }
 $('#cartBar').addEventListener('click', openCart);
 $('#cartScrim').addEventListener('click', closeCart);
@@ -1330,6 +1646,7 @@ function openPay(){
     return '<button class="chip" data-pay="' + v + '">' + (i === 0 && v === Math.ceil(t.total) ? 'Uang Pas' : intf(v)) + '</button>';
   }).join('');
   updatePay();
+  hideFlash();
   openSheet('#paySheet');
 }
 $('#btnPay').addEventListener('click', openPay);
@@ -1383,7 +1700,7 @@ $('#btnFinish').addEventListener('click', function(){
   // kurangi stok
   S.cart.forEach(function(l){
     var p = S.products.filter(function(x){ return x.id === l.id; })[0];
-    if(p && p.stock !== '' && p.stock != null) p.stock = Math.max(0, Number(p.stock) - l.qty);
+    if(p && !stokBebas(p)) p.stock = Math.max(0, stokAda(p) - l.qty);
   });
   S.trx.unshift(trx);
   if(S.trx.length > 500) S.trx.length = 500;
@@ -1391,6 +1708,7 @@ $('#btnFinish').addEventListener('click', function(){
   save();
   closeSheet('#paySheet');
   closeCart();
+  hideFlash();
   renderCart(); renderGrid();
   showReceipt(trx);
 });
@@ -1499,7 +1817,7 @@ function renderProdukList(){
   }
   $('#plist').innerHTML = rows.map(function(p){
     var ava = p.emoji ? esc(p.emoji) : esc(initials(p.name));
-    var st = (p.stock === '' || p.stock == null) ? 'stok bebas' : 'stok ' + intf(p.stock);
+    var st = stokBebas(p) ? 'stok bebas' : 'stok ' + intf(stokAda(p));
     return '<div class="item" style="--h:' + hue(p.name) + '">' +
       '<div class="item__ava">' + ava + '</div>' +
       '<div class="item__b"><b>' + esc(p.name) + '</b>' +
@@ -1536,7 +1854,7 @@ function openForm(id){
   $('#fCat').value   = p ? (p.cat || '') : '';
   $('#fEmoji').value = p ? (p.emoji || '') : '';
   $('#fPrice').value = p ? String(p.price) : '';
-  $('#fStock').value = (p && p.stock !== '' && p.stock != null) ? String(p.stock) : '';
+  $('#fStock').value = (p && !stokBebas(p)) ? String(stokAda(p)) : '';
   hintPrice();
   openSheet('#formSheet');
   setTimeout(function(){ $('#fName').focus(); }, 260);
@@ -1552,7 +1870,7 @@ $('#btnSaveProduct').addEventListener('click', function(){
   if(!name){ toast('Nama barang wajib diisi','err'); $('#fName').focus(); return; }
   if(price <= 0){ toast('Harga satuan harus lebih dari 0','err'); $('#fPrice').focus(); return; }
   var stockRaw = $('#fStock').value.trim();
-  var stock = stockRaw === '' ? '' : Math.max(0, Math.round(parseMoney(stockRaw)));
+  var stock = stockRaw === '' ? null : Math.max(0, Math.round(parseMoney(stockRaw)));   // null = tak dibatasi (skema v2)
   var data = {
     name: name,
     cat: $('#fCat').value.trim() || 'Lainnya',
@@ -1637,7 +1955,17 @@ function renderAtur(){
   $('#setLand').classList.toggle('on', !!S.settings.landing);
   var bytes = 0;
   try{ bytes = (localStorage.getItem(LS) || '').length; }catch(e){}
-  $('#dbInfo').textContent = intf(S.products.length) + ' produk · ' + intf(S.trx.length) + ' transaksi · ' + (bytes > 1024 ? (bytes/1024).toFixed(1) + ' KB' : bytes + ' B');
+  $('#dbInfo').textContent = intf(S.products.length) + ' produk · ' + intf(S.trx.length) + ' transaksi · ' +
+    (bytes > 1024 ? (bytes/1024).toFixed(1) + ' KB' : bytes + ' B') + ' · skema v' + S.schema;
+
+  var raw = bakRaw();
+  $('#rowBak').hidden = !raw;
+  if(raw){
+    var kb = raw.length > 1024 ? (raw.length/1024).toFixed(1) + ' KB' : raw.length + ' B';
+    var jml = '';
+    try{ var d = JSON.parse(raw); if(Array.isArray(d.products)) jml = intf(d.products.length) + ' produk · '; }catch(e){}
+    $('#bakInfo').textContent = jml + kb + ' — bentuk data sebelum perubahan terakhir';
+  }
   var w = $('#storageWarn');
   if(!storageOK){ w.hidden = false; w.textContent = '⚠ Browser ini memblokir penyimpanan lokal. Data hanya bertahan selama halaman terbuka — unduh cadangan sebelum menutup.'; }
   else{ w.hidden = true; }
@@ -1666,19 +1994,30 @@ function syncStoreBar(){
   $('#tbSub').textContent = S.settings.addr || 'Point of Sale';
 }
 function backupJSON(){
-  return JSON.stringify({ v:1, saved:new Date().toISOString(), products:S.products, trx:S.trx, settings:S.settings }, null, 2);
+  /* "v" dipertahankan di depan walau sudah ada "schema": petunjuk di lembar
+     Tempel menyuruh pemakai memastikan teksnya diawali {"v":1, dan versi
+     aplikasi lama hanya mengenali kolom itu. Membuangnya akan membuat cadangan
+     baru ditolak oleh HP yang belum diperbarui — persis di saat orang paling
+     butuh memulihkan. */
+  return JSON.stringify({
+    v:1, schema:S.schema, saved:new Date().toISOString(),
+    products:S.products, trx:S.trx, settings:S.settings
+  }, null, 2);
 }
 function applyBackup(text){
   var d = null;
   try{ d = JSON.parse(String(text || '').trim()); }catch(err){ toast('Teks cadangan tidak terbaca','err'); return; }
   if(!d || !Array.isArray(d.products)){ toast('Isi cadangan tidak sesuai','err'); return; }
-  confirmDlg('Pulihkan data?','Produk, riwayat, dan pengaturan saat ini akan diganti dengan isi cadangan.','Ya, pulihkan').then(function(ok){
+  var from = Number(d.schema || d.v || 1) || 1;
+  var msg = 'Produk, riwayat, dan pengaturan saat ini akan diganti dengan isi cadangan.';
+  if(from < SCHEMA) msg += ' Cadangan ini dari versi lama — isinya disesuaikan dulu secara otomatis.';
+  confirmDlg('Pulihkan data?', msg, 'Ya, pulihkan').then(function(ok){
     if(!ok) return;
-    S.products = d.products;
-    S.trx = Array.isArray(d.trx) ? d.trx : [];
-    S.settings = Object.assign({}, DEFAULTS, d.settings || {});
-    S.cart = [];
-    S.products.forEach(function(p){ if(!p.id) p.id = uid(); p.price = Number(p.price)||0; });
+    /* Data yang sekarang disalin dulu. Memulihkan cadangan yang keliru adalah
+       cara paling gampang menghapus sehari penuh penjualan, dan sampai sini
+       tidak ada satu pun langkah yang bisa dibatalkan. */
+    try{ snapshot(localStorage.getItem(LS)); }catch(e){}
+    adopt(migrate(d));
     save(); applyTheme(); syncStoreBar(); renderCats(); renderGrid(); renderCart(); renderProdukList(); renderRiwayat(); renderAtur();
     toast('Data dipulihkan — ' + intf(S.products.length) + ' produk','ok');
   });
@@ -1697,10 +2036,7 @@ $('#btnPasteOk').addEventListener('click', function(){
   closeSheet('#pasteSheet');
   applyBackup(v);
 });
-$('#btnExport').addEventListener('click', function(){
-  var d = new Date();
-  var name = 'cadangan-kasir-' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '.json';
-  var json = backupJSON();
+function unduhJSON(name, json, okMsg){
   var b = bridge();
   if(b && b.saveBackup){ try{ b.saveBackup(name, json); return; }catch(e){} }
   var blob = new Blob([json], { type:'application/json' });
@@ -1709,7 +2045,24 @@ $('#btnExport').addEventListener('click', function(){
   a.download = name;
   document.body.appendChild(a); a.click();
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
-  toast('Cadangan diunduh','ok');
+  toast(okMsg || 'Cadangan diunduh','ok');
+}
+function tanggalBerkas(){ var d = new Date(); return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()); }
+
+$('#btnExport').addEventListener('click', function(){
+  unduhJSON('cadangan-kasir-' + tanggalBerkas() + '.json', backupJSON(), 'Cadangan diunduh');
+});
+
+/* Salinan mentah sebelum migrasi/pemulihan/reset terakhir. Sengaja hanya bisa
+   DIUNDUH, bukan dipulihkan sekali ketuk: kalau langsung dipulihkan, pemakai
+   yang salah pencet di sini kehilangan penjualan sesudah migrasi, dan kita balik
+   ke masalah yang sama dari arah sebaliknya. Diunduh dulu, diperiksa, baru masuk
+   lewat "Pulihkan dari file" — jalur yang memang sudah minta konfirmasi. */
+function bakRaw(){ try{ return localStorage.getItem(LSB); }catch(e){ return null; } }
+$('#btnBak').addEventListener('click', function(){
+  var raw = bakRaw();
+  if(!raw){ toast('Tidak ada salinan tersimpan','err'); renderAtur(); return; }
+  unduhJSON('cadangan-kasir-sebelum-pemutakhiran-' + tanggalBerkas() + '.json', raw, 'Salinan lama diunduh');
 });
 $('#btnImport').addEventListener('click', function(){ $('#fileImport').click(); });
 $('#fileImport').addEventListener('change', function(e){
@@ -1724,7 +2077,8 @@ $('#fileImport').addEventListener('change', function(e){
 $('#btnReset').addEventListener('click', function(){
   confirmDlg('Hapus semua data?','Seluruh produk, riwayat transaksi, dan pengaturan akan kembali ke bawaan. Tindakan ini tidak bisa dibatalkan.','Ya, hapus semua').then(function(ok){
     if(!ok) return;
-    try{ localStorage.removeItem(LS); }catch(e){}
+    try{ snapshot(localStorage.getItem(LS)); localStorage.removeItem(LS); }catch(e){}
+    S.schema = SCHEMA;
     S.products = seedProducts(); S.trx = []; S.cart = []; S.settings = Object.assign({}, DEFAULTS);
     save(); applyTheme(); syncStoreBar(); renderCats(); renderGrid(); renderCart(); renderProdukList(); renderRiwayat(); renderAtur();
     toast('Data direset ke bawaan','ok');
@@ -1756,6 +2110,10 @@ else{ showApp('kasir'); }
 
 // tampilkan peringatan storage sejak awal bila perlu
 if(!storageOK){ setTimeout(function(){ toast('Penyimpanan lokal diblokir browser — gunakan Cadangkan Data.','err'); }, 900); }
+
+/* Keluhan migrasi ditahan sampai sesudah boot: toast yang dipanggil dari load()
+   akan mencari #toasts sebelum sisa halaman sempat dirangkai. */
+if(bootNote){ setTimeout(function(){ toast(bootNote, 'err'); }, 1400); }
 
 })();
 </script>
