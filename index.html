@@ -13,32 +13,77 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230A0C0F'/%3E%3Cpath d='M16 22h32M16 32h32M16 42h20' stroke='%23E3C27E' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
 /* ============================== TOKENS ============================== */
+/* ── NEON UNGU (permintaan pemilik, 5/9/2026) ─────────────────────────────
+   Warna aksennya dulu emas. Namanya masih --gold di ratusan tempat, jadi yang
+   diubah NILAINYA, bukan namanya: --gold dan kawan-kawan sekarang menunjuk ke
+   --aksen. Mengganti nama variabel di ratusan tempat sekaligus adalah cara
+   paling mudah menciptakan satu tempat yang terlewat lalu tampil dengan warna
+   lama - dan yang terlewat itu selalu ketahuan oleh pemakainya, bukan oleh
+   yang mengubahnya.
+
+   --nyala adalah pendar neonnya. Sengaja SATU variabel: pendar yang ditulis
+   ulang dengan angka berbeda di banyak tempat akan pelan-pelan jadi belasan
+   pendar yang tidak sama, dan layarnya terlihat kotor tanpa ada yang bisa
+   menunjuk sebabnya. */
 :root{
-  --bg:#0A0C0F; --bg2:#0D1015;
-  --surface:#12161C; --surface2:#171C24; --surface3:#1E242E;
-  --line:rgba(255,255,255,.075); --line2:rgba(255,255,255,.14);
-  --txt:#EDF1F7; --txt2:#98A2B3; --txt3:#646E7D;
-  --gold:#E3C27E; --gold2:#C9A24D; --goldsoft:rgba(227,194,126,.12);
+  --aksen:#C08CFF; --aksen2:#8B5CF6; --aksensoft:rgba(176,110,255,.14);
+  --nyala:0 0 12px rgba(176,110,255,.42);
+  --nyala-kuat:0 0 20px rgba(176,110,255,.60);
+
+  --bg:#08060D; --bg2:#0C0914;
+  --surface:#120F1E; --surface2:#181327; --surface3:#211934;
+  /* Garis penegas ikut menyala, bukan abu-abu netral. */
+  --line:rgba(176,110,255,.17); --line2:rgba(176,110,255,.34);
+  --txt:#F0EAFB; --txt2:#A99BC4; --txt3:#7A6D93;
+  --gold:var(--aksen); --gold2:var(--aksen2); --goldsoft:var(--aksensoft);
   --ok:#4ADE80; --oksoft:rgba(74,222,128,.13);
   --warn:#FBBF24; --danger:#FB7185; --dangersoft:rgba(251,113,133,.13);
-  --ink:#171203;
-  --shadow:0 24px 60px -28px rgba(0,0,0,.9);
-  --shadow-sm:0 6px 18px -10px rgba(0,0,0,.8);
+  --ink:#1B0B33;
+  --shadow:0 24px 60px -28px rgba(0,0,0,.92);
+  --shadow-sm:0 6px 18px -10px rgba(0,0,0,.82);
   --r:16px; --rs:11px; --rl:24px;
   --nav-h:64px;
 }
 html[data-theme="light"]{
-  --bg:#F4F4F1; --bg2:#FFFFFF;
-  --surface:#FFFFFF; --surface2:#FAFAF7; --surface3:#F0F0EA;
-  --line:rgba(16,22,32,.09); --line2:rgba(16,22,32,.18);
-  --txt:#101620; --txt2:#5A6472; --txt3:#8C95A3;
-  --gold:#8A6A18; --gold2:#B5912F; --goldsoft:rgba(181,145,47,.14);
+  /* Neon tidak menyala di atas putih - yang bersinar di layar terang cuma
+     terlihat kotor. Jadi di mode terang ungunya dipakai sebagai warna pekat,
+     dan pendarnya hampir dimatikan. Memaksakan pendar yang sama di kedua mode
+     akan membuat salah satunya selalu jelek. */
+  --aksen:#6D28D9; --aksen2:#7C3AED; --aksensoft:rgba(109,40,217,.12);
+  --nyala:0 0 8px rgba(109,40,217,.18);
+  --nyala-kuat:0 0 14px rgba(109,40,217,.26);
+
+  --bg:#F5F2FA; --bg2:#FFFFFF;
+  --surface:#FFFFFF; --surface2:#FAF8FE; --surface3:#F1ECF9;
+  --line:rgba(109,40,217,.16); --line2:rgba(109,40,217,.30);
+  --txt:#160D24; --txt2:#5B5170; --txt3:#8A82A0;
+  --gold:var(--aksen); --gold2:var(--aksen2); --goldsoft:var(--aksensoft);
   --ok:#0E9F5B; --oksoft:rgba(14,159,91,.12);
   --warn:#B4740A; --danger:#D9364C; --dangersoft:rgba(217,54,76,.1);
-  --ink:#FFFDF6;
-  --shadow:0 22px 50px -30px rgba(16,22,32,.45);
-  --shadow-sm:0 4px 14px -8px rgba(16,22,32,.4);
+  --ink:#FFFFFF;
+  --shadow:0 22px 50px -30px rgba(22,13,36,.45);
+  --shadow-sm:0 4px 14px -8px rgba(22,13,36,.4);
 }
+
+/* ── GARIS PENEGAS YANG MENYALA ───────────────────────────────────────────
+   Pendarnya sengaja hanya dipasang di garis PEMISAH BESAR - kepala lembar,
+   bilah atas, bilah bawah, kepala keranjang - bukan di setiap kotak. Neon yang
+   dipasang di mana-mana berhenti menegaskan apa pun: kalau semuanya menyala,
+   tidak ada yang menonjol, dan layarnya cuma jadi silau. */
+.topbar{box-shadow:0 1px 0 var(--line2), 0 6px 18px -14px rgba(176,110,255,.55)}
+.bottomnav{box-shadow:0 -1px 0 var(--line2), 0 -6px 18px -14px rgba(176,110,255,.55)}
+.sheet__head,.cart__head{box-shadow:0 1px 0 var(--line2), 0 5px 14px -12px rgba(176,110,255,.6)}
+.sheet__foot,.cart__foot{box-shadow:0 -1px 0 var(--line2), 0 -5px 14px -12px rgba(176,110,255,.6)}
+.sheet__grab,.cart__grab{box-shadow:var(--nyala)}
+.cartbar{box-shadow:var(--shadow), var(--nyala)}
+.btn--gold{box-shadow:var(--nyala-kuat)}
+.pcard:active{box-shadow:var(--nyala)}
+html[data-theme="light"] .topbar,
+html[data-theme="light"] .bottomnav,
+html[data-theme="light"] .sheet__head,
+html[data-theme="light"] .cart__head,
+html[data-theme="light"] .sheet__foot,
+html[data-theme="light"] .cart__foot{box-shadow:0 1px 0 var(--line2)}
 
 /* ============================== BASE ============================== */
 *,*::before,*::after{box-sizing:border-box}
@@ -1334,11 +1379,37 @@ function parseMoney(v){
   var n = parseFloat(s);
   return isFinite(n) ? Math.max(0, n) : 0;
 }
-function hue(str){ var h = 0, i; str = String(str||''); for(i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) % 360; } return h; }
+/* Warna kotak inisial diacak dari NAMA barangnya, bukan diambil acak - barang
+   yang sama selalu dapat warna yang sama, jadi kasir lama-lama hafal letaknya
+   lewat warna sebelum sempat membaca tulisannya. Itu sebabnya warnanya tidak
+   dibuat seragam.
+
+   Tapi acakan penuh 0-360 derajat memberi pelangi, dan pemilik minta neon UNGU
+   (5/9/2026). Jadi acakannya dikurung ke keluarga ungu: 252-322 derajat, dari
+   nila sampai magenta. Tetap ada 70 derajat untuk membedakan 169 barang,
+   sementara seluruh layar tetap satu keluarga warna.
+
+   Dikurung, BUKAN diseragamkan: dengan 169 barang di satu kisi, kartu yang
+   semuanya kembar membuat mata harus membaca satu per satu - persis pekerjaan
+   yang seharusnya dihemat oleh warna. */
+var HUE_AWAL = 252, HUE_RENTANG = 70;
+function hue(str){
+  var h = 0, i; str = String(str||'');
+  for(i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) % 360; }
+  return HUE_AWAL + (h % HUE_RENTANG);
+}
 function initials(name){
   var w = String(name||'?').trim().split(/\s+/).filter(Boolean);
   return ((w[0]||'?')[0] + (w[1] ? w[1][0] : '')).toUpperCase();
 }
+
+/* Satu-satunya tempat yang memutuskan apa yang tampil di kotak kecil produk.
+   Pemilik minta emoji dibuang (5/9/2026): "gua ga suka, kasih inisial barang
+   aja". Emojinya TIDAK dihapus dari data - kolom emoji tetap tersimpan supaya
+   keputusan ini bisa dibatalkan tanpa kehilangan apa pun. Yang berubah cuma
+   apa yang digambar. */
+function ava(o){ return initials(o && o.name ? o.name : ''); }
+window.ava = ava;
 function pad(n){ return n < 10 ? '0' + n : '' + n; }
 function dstamp(ts){ var d = new Date(ts); return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+' '+pad(d.getHours())+':'+pad(d.getMinutes()); }
 function daykey(ts){ var d = new Date(ts); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
@@ -1362,19 +1433,175 @@ var DEFAULTS = {
 };
 
 var SEED = [
-  ['Beras Premium 5 kg','Sembako',72500,24,'🍚'],
-  ['Minyak Goreng 2 L','Sembako',38000,30,'🛢️'],
-  ['Gula Pasir 1 kg','Sembako',17500,40,'🍬'],
-  ['Telur Ayam 1 kg','Sembako',29000,18,'🥚'],
-  ['Pupuk NPK 1 kg','Pertanian',18000,50,'🌱'],
-  ['Pupuk Urea 1 kg','Pertanian',9500,60,'🧪'],
-  ['Benih Cabai Rawit','Pertanian',27000,15,'🌶️'],
-  ['Polybag 25×25 (50 pcs)','Pertanian',22000,20,'🪴'],
-  ['Kopi Sachet Renceng','Minuman',12000,45,'☕'],
-  ['Air Mineral 600 ml','Minuman',3500,120,'💧'],
-  ['Teh Botol 450 ml','Minuman',5000,60,'🧃'],
-  ['Sabun Mandi Batang','Rumah Tangga',4500,45,'🧼'],
-  ['Deterjen Bubuk 800 g','Rumah Tangga',22000,16,'🧺']
+  ["Kapas modis","Lainnya",8000,"",""],
+  ["Grand gelas","Lainnya",23000,"",""],
+  ["Aqua galon","Lainnya",23000,"",""],
+  ["Aqua kecil","Lainnya",5000,"",""],
+  ["Aqua besar","Lainnya",7000,"",""],
+  ["Grand galon","Lainnya",15000,"",""],
+  ["Gas","Lainnya",24000,"",""],
+  ["Sampoerna prima hitam","Lainnya",17000,"",""],
+  ["Jarum hitam wraps","Lainnya",15000,"",""],
+  ["Jarum kretek merah","Lainnya",18000,"",""],
+  ["Djarum 76 merah","Lainnya",17000,"",""],
+  ["Djarum 76 ijo","Lainnya",17000,"",""],
+  ["Komet","Lainnya",26000,"",""],
+  ["Menara besar","Lainnya",28000,"",""],
+  ["Sampoerna kretek","Lainnya",17000,"",""],
+  ["Sergio","Lainnya",30000,"",""],
+  ["Menara kecil","Lainnya",18000,"",""],
+  ["Gudang garam ijo","Lainnya",14000,"",""],
+  ["Gudang garam merah","Lainnya",20000,"",""],
+  ["Kedai kopi","Lainnya",13000,"",""],
+  ["Jarum istimewa","Lainnya",17000,"",""],
+  ["Jarum kuning","Lainnya",17000,"",""],
+  ["Exo","Lainnya",12000,"",""],
+  ["Toracino","Lainnya",18000,"",""],
+  ["Sniper","Lainnya",18000,"",""],
+  ["Rastel","Lainnya",15000,"",""],
+  ["Kartel","Lainnya",17000,"",""],
+  ["Hit mild","Lainnya",25000,"",""],
+  ["Bull","Lainnya",32000,"",""],
+  ["Clas mild","Lainnya",31000,"",""],
+  ["Sampoerna mild","Lainnya",38000,"",""],
+  ["Surya 12","Lainnya",28000,"",""],
+  ["Surya 16","Lainnya",38000,"",""],
+  ["My baby besar","Lainnya",21000,"",""],
+  ["My baby sedang","Lainnya",16000,"",""],
+  ["Koyo cabe","Lainnya",2000,"",""],
+  ["Tolak angin dewasa","Lainnya",5000,"",""],
+  ["Tolak angin anak","Lainnya",4000,"",""],
+  ["Geliga","Lainnya",10000,"",""],
+  ["Downy","Lainnya",500,"",""],
+  ["Zinc","Lainnya",500,"",""],
+  ["Rejoice","Lainnya",1000,"",""],
+  ["Sunsilk","Lainnya",1000,"",""],
+  ["Pantene","Lainnya",1000,"",""],
+  ["Marinasi","Lainnya",1000,"",""],
+  ["Masako","Lainnya",500,"",""],
+  ["Kuah bakso","Lainnya",1000,"",""],
+  ["Micin mikimoto","Lainnya",3500,"",""],
+  ["Sauri","Lainnya",2500,"",""],
+  ["Sajiku","Lainnya",3000,"",""],
+  ["Energen","Lainnya",2500,"",""],
+  ["Good day","Lainnya",2500,"",""],
+  ["Torabika","Lainnya",2000,"",""],
+  ["Kopi luwak","Lainnya",2000,"",""],
+  ["White kopi","Lainnya",2000,"",""],
+  ["Gula aren kopi 3","Lainnya",4000,"",""],
+  ["Gula aren kopi","Lainnya",2000,"",""],
+  ["Garam besar","Lainnya",3000,"",""],
+  ["Klangenan besar","Lainnya",11000,"",""],
+  ["Klangenan","Lainnya",6500,"",""],
+  ["Frisian flag sachet","Lainnya",2000,"",""],
+  ["Sambel ABC refil kecil","Lainnya",4000,"",""],
+  ["Terasi ABC","Lainnya",500,"",""],
+  ["Terasi udang","Lainnya",500,"",""],
+  ["Sarden Atlantis","Lainnya",10000,"",""],
+  ["Sarden ABC","Lainnya",11000,"",""],
+  ["Frisian flag coklat","Lainnya",13000,"",""],
+  ["Frisian flag putih","Lainnya",13000,"",""],
+  ["Tiga sapi","Lainnya",14000,"",""],
+  ["Santan kara","Lainnya",6000,"",""],
+  ["Pia Pringsewu","Lainnya",6000,"",""],
+  ["Roti-rotian","Lainnya",2000,"",""],
+  ["Kerupuk","Lainnya",5000,"",""],
+  ["Nabati","Lainnya",2000,"",""],
+  ["Astor","Lainnya",1000,"",""],
+  ["Choki-choki","Lainnya",1000,"",""],
+  ["Superstar","Lainnya",1000,"",""],
+  ["Kalpa","Lainnya",2000,"",""],
+  ["Slai olai","Lainnya",2000,"",""],
+  ["Milku","Lainnya",4500,"",""],
+  ["Nutriboost","Lainnya",8000,"",""],
+  ["Kratingdeng","Lainnya",7000,"",""],
+  ["Cimory kecil","Lainnya",3000,"",""],
+  ["Cimory besar","Lainnya",7500,"",""],
+  ["Teh pucuk","Lainnya",5000,"",""],
+  ["Susu kotak","Lainnya",3500,"",""],
+  ["Susu beruang","Lainnya",11000,"",""],
+  ["Golda","Lainnya",5000,"",""],
+  ["Pulpy","Lainnya",6000,"",""],
+  ["Floridina","Lainnya",4000,"",""],
+  ["Lasegar","Lainnya",7000,"",""],
+  ["Javana","Lainnya",4000,"",""],
+  ["Pocari","Lainnya",8000,"",""],
+  ["Nipis madu","Lainnya",6000,"",""],
+  ["Sprite","Lainnya",6000,"",""],
+  ["Roti kangguru","Lainnya",4000,"",""],
+  ["Roma sandwich","Lainnya",7500,"",""],
+  ["Roti kacang","Lainnya",7000,"",""],
+  ["Roma kelapa","Lainnya",10000,"",""],
+  ["Hatari","Lainnya",7500,"",""],
+  ["Mie sedap","Lainnya",3500,"",""],
+  ["Mie isi 2","Lainnya",4500,"",""],
+  ["Mie telur keong mas","Lainnya",8500,"",""],
+  ["Mie jangkar","Lainnya",4000,"",""],
+  ["Mie telur 3 ayam","Lainnya",6500,"",""],
+  ["Aci 1 kilo","Lainnya",7500,"",""],
+  ["Tepung terigu setengah kilo","Lainnya",5000,"",""],
+  ["Tepung terigu 1 kilo","Lainnya",10000,"",""],
+  ["Royco","Lainnya",500,"",""],
+  ["Bumbu racik","Lainnya",2000,"",""],
+  ["Garam halus","Lainnya",4000,"",""],
+  ["Sasa tanggung","Lainnya",5000,"",""],
+  ["Sasa besar","Lainnya",11000,"",""],
+  ["Kopi jempol","Lainnya",5000,"",""],
+  ["Teh Sosro celup","Lainnya",7000,"",""],
+  ["Saus ABC refill","Lainnya",4000,"",""],
+  ["Saus ABC","Lainnya",7500,"",""],
+  ["Fermipan","Lainnya",5000,"",""],
+  ["Vanili","Lainnya",1000,"",""],
+  ["Swallow grow","Lainnya",4000,"",""],
+  ["Teh Sariwangi","Lainnya",7000,"",""],
+  ["Bango besar","Lainnya",23000,"",""],
+  ["Bango tanggung","Lainnya",10000,"",""],
+  ["Bango kecil","Lainnya",3000,"",""],
+  ["Teh Jawa","Lainnya",3000,"",""],
+  ["Terigu tulip","Lainnya",10000,"",""],
+  ["Tepung beras rose brand","Lainnya",9000,"",""],
+  ["Gula pasir setengah kilo","Lainnya",10000,"",""],
+  ["Bom deterjen","Lainnya",5000,"",""],
+  ["Ekonomi","Lainnya",2000,"",""],
+  ["Lidah buaya","Lainnya",2000,"",""],
+  ["Vape obat nyamuk","Lainnya",5000,"",""],
+  ["So Klin lantai","Lainnya",5000,"",""],
+  ["Wipol","Lainnya",5000,"",""],
+  ["Sunlight sabun cuci piring","Lainnya",2000,"",""],
+  ["Mama lemon sabun cuci piring kecil","Lainnya",2000,"",""],
+  ["Mama lemon sabun cuci piring besar","Lainnya",4000,"",""],
+  ["Ekonomi sabun cuci piring","Lainnya",2000,"",""],
+  ["Rinso 1 renceng","Lainnya",11000,"",""],
+  ["So Klin satu renteng","Lainnya",11000,"",""],
+  ["So Klin cair","Lainnya",500,"",""],
+  ["Lilin","Lainnya",2000,"",""],
+  ["Zen","Lainnya",4000,"",""],
+  ["Shinzui","Lainnya",5000,"",""],
+  ["Lifebuoy","Lainnya",4000,"",""],
+  ["Gif","Lainnya",3000,"",""],
+  ["Ciptadent t","Lainnya",4500,"",""],
+  ["Pepsodent","Lainnya",5000,"",""],
+  ["Softex","Lainnya",6000,"",""],
+  ["Kingkong obat nyamuk","Rumah Tangga",6000,"",""],
+  ["Marina kecil","Rumah Tangga",6000,"",""],
+  ["Marina biru","Rumah Tangga",9000,"",""],
+  ["Marina","Rumah Tangga",7500,"",""],
+  ["Bedak my baby kecil","Rumah Tangga",5000,"",""],
+  ["Bedak my baby","Rumah Tangga",10000,"",""],
+  ["Bedak Cussons kecil","Rumah Tangga",5000,"",""],
+  ["Tisu Jolly","Rumah Tangga",10000,"",""],
+  ["Minyak 1 l","Sembako",21000,"","🛢️"],
+  ["Gula Pasir 1 kg","Sembako",20000,40,"🍬"],
+  ["Telur Ayam 1 kg","Sembako",28000,12,"🥚"],
+  ["Sikat gigi formula berapa","Rumah Tangga",50000,"","🌱"],
+  ["Bedak Cussons","Rumah Tangga",8500,"","🧪"],
+  ["Benih Cabai Rawit","Pertanian",27000,15,"🌶️"],
+  ["Polybag 25×25 (50 pcs)","Pertanian",22000,20,"🪴"],
+  ["Kopi Sachet Renceng","Minuman",12000,45,"☕"],
+  ["Air Mineral 600 ml","Minuman",3500,120,"💧"],
+  ["Teh Botol 450 ml","Minuman",5000,60,"🧃"],
+  ["Sabun Mandi Batang","Rumah Tangga",4500,45,"🧼"],
+  ["Deterjen Bubuk 800 g","Rumah Tangga",22000,16,"🧺"]
 ];
 function seedProducts(){
   return SEED.map(function(r){
@@ -2039,7 +2266,7 @@ function renderGrid(){
     var bebas = stokBebas(p);
     var left = bebas ? null : (stokAda(p) - n);
     var out = !bebas && left <= 0;
-    var ava = p.emoji ? esc(p.emoji) : esc(initials(p.name));
+    var ava = esc(window.ava(p));
     return '<button class="pcard' + (n ? ' is-in' : '') + (out ? ' is-out' : '') + '" data-add="' + esc(p.id) + '" style="--h:' + hue(p.name) + '">' +
       (n ? '<span class="pcard__b">' + n + '</span>' : '') +
       '<span class="pcard__ava">' + ava +
@@ -2097,7 +2324,7 @@ function showFlash(p){
   if(!line){ hideFlash(); return; }
   flashId = p.id;
   $('#flAva').style.setProperty('--h', hue(p.name));
-  $('#flAva').textContent = p.emoji ? p.emoji : initials(p.name);
+  $('#flAva').textContent = window.ava(p);
   $('#flName').textContent = p.name;
   $('#flMeta').innerHTML = '<i>' + esc(intf(line.qty)) + ' pcs</i> · ' + esc(fmt(round2(line.price * line.qty)));
   $('#flash').classList.add('show');
@@ -2142,7 +2369,7 @@ function renderCart(){
       '<b>Keranjang masih kosong</b>Ketuk barang di sebelah untuk mulai menghitung.</div>';
   }else{
     $('#cartBody').innerHTML = S.cart.map(function(l){
-      var ava = l.emoji ? esc(l.emoji) : esc(initials(l.name));
+      var ava = esc(window.ava(l));
       return '<div class="line" style="--h:' + hue(l.name) + '">' +
         '<div class="line__ava">' + ava + '</div>' +
         '<div class="line__body">' +
@@ -2174,7 +2401,7 @@ function renderCart(){
      dan mulai terbaca sebagai hiasan. */
   var MAX = 5;
   $('#cbAv').innerHTML = S.cart.slice(0, MAX).map(function(l){
-    return '<span style="--h:' + hue(l.name) + '">' + (l.emoji ? esc(l.emoji) : esc(initials(l.name))) + '</span>';
+    return '<span style="--h:' + hue(l.name) + '">' + esc(window.ava(l)) + '</span>';
   }).join('') + (S.cart.length > MAX ? '<span class="more">+' + intf(S.cart.length - MAX) + '</span>' : '');
   $('#cartBar').classList.toggle('show', t.lines > 0 && !$('#cartWrap').classList.contains('open'));
 }
@@ -2398,7 +2625,7 @@ function renderProdukList(){
     return;
   }
   $('#plist').innerHTML = rows.map(function(p){
-    var ava = p.emoji ? esc(p.emoji) : esc(initials(p.name));
+    var ava = esc(window.ava(p));
     var st = stokBebas(p) ? 'stok bebas' : 'stok ' + intf(stokAda(p));
     return '<div class="item" style="--h:' + hue(p.name) + '">' +
       '<div class="item__ava">' + ava + '</div>' +
