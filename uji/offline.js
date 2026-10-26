@@ -244,8 +244,8 @@ function ok(nama, syarat, detail) {
     q.on('console', m => { if (m.type() === 'error') galatK.push('console: ' + m.text()); });
     await q.goto(URL);
     await q.click('[data-open-app]');
-    await q.click('#kalkBtn');
-    ok('kalkulator terbuka dari bilah atas', await q.locator('#kalkSheet.open').count() === 1);
+    await q.click('#bnav .js-kalk');
+    ok('kalkulator terbuka dari menu bawah (ponsel)', await q.locator('#kalkSheet.open').count() === 1);
     const tekan = async (urut) => { for (const k of urut.split(' ')) await q.click('#kalkPad [data-kk="' + k + '"]'); };
     const layar = async () => (await q.locator('#kalkHasil').textContent()).trim();
     const kasus = [
@@ -282,6 +282,23 @@ function ok(nama, syarat, detail) {
     ok('Escape menutup kalkulator', await q.locator('#kalkSheet.open').count() === 0);
     ok('tanpa galat javascript', galatK.length === 0, galatK.join(' | '));
     await c.close();
+
+    // laptop: menu samping tegak di bawah bilah atas, dan Kalkulator ada di situ
+    const cl = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const ql = await cl.newPage();
+    await ql.goto(URL);
+    await ql.click('[data-open-app]');
+    const sb = await ql.evaluate(() => {
+      const t = document.getElementById('tabs').getBoundingClientRect();
+      const b = document.querySelector('.topbar').getBoundingClientRect();
+      const m = document.querySelector('.main').getBoundingClientRect();
+      return { kiri: Math.round(t.left), atas: Math.round(t.top), bawahTopbar: Math.round(b.bottom), lebar: Math.round(t.width), mainKiri: Math.round(m.left) };
+    });
+    ok('menu samping menempel di kiri, di bawah bilah atas', sb.kiri === 0 && sb.atas >= sb.bawahTopbar - 2, JSON.stringify(sb));
+    ok('isi halaman tidak tertutup menu samping', sb.mainKiri >= sb.lebar, JSON.stringify(sb));
+    await ql.click('#tabs .js-kalk');
+    ok('kalkulator terbuka dari menu samping (laptop)', await ql.locator('#kalkSheet.open').count() === 1);
+    await cl.close();
   }
 
   await browser.close();

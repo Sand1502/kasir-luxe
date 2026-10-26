@@ -1061,6 +1061,129 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
 .kalk__pad .eq{background:linear-gradient(150deg,var(--gold),var(--gold2));color:var(--ink);border-color:transparent;box-shadow:var(--nyala-kuat);font-size:26px}
 /* HP berlayar pendek: riwayat kecil dikorbankan supaya keypad tidak perlu digulung. */
 @media(max-height:720px){.kalk__riwayat{display:none}.kalk__pad button{height:50px}}
+
+/* ============================== POS TEGAS ============================== */
+/* Permintaan pemilik (26/10/2026): tampilan kasir "seperti aplikasi kasir
+   sungguhan, dibalut tema modern dengan garis-garis tegas". Warna Dusk tetap,
+   yang berubah BENTUKNYA:
+   - garis: dua tingkat saja. --tegas untuk batas besar (bilah, panel, kartu
+     terpilih), --tegas2 untuk sekat di dalamnya. Semua 2px; garis 1px yang
+     samar-samar itulah yang membuat tampilan lama terasa "lembek";
+   - sudut dipersempit (12/8/16px) dan bayangan lembut dibuang: tombol utama
+     memakai bayangan keras 3px yang "turun" saat ditekan;
+   - kartu produk dipadatkan: inisial kecil, harga di bilah bawah yang dipisah
+     garis, kategori disembunyikan (rel/keping kategori sudah menunjukkannya);
+   - laptop: menu pindah ke bilah samping, seperti aplikasi kasir di tablet;
+   - sunset tetap ada di beranda, kotak total bayar, dan layar kalkulator. */
+:root{
+  --tegas:rgba(244,241,247,.34); --tegas2:rgba(244,241,247,.16);
+  --r:12px; --rs:8px; --rl:16px;
+  --nyala:0 0 0 0 transparent; --nyala-kuat:0 0 0 0 transparent;
+  --sidebar-w:92px; --topbar-h:68px;
+}
+html[data-theme="light"]{
+  --tegas:rgba(42,20,32,.82); --tegas2:rgba(42,20,32,.2);
+  --nyala:0 0 0 0 transparent; --nyala-kuat:0 0 0 0 transparent;
+}
+
+/* Bilah atas: padat, tanpa kabur, garis bawah tegas (garis senja tipis dicabut).
+   Tanpa backdrop-filter juga syarat bilah samping: elemen ber-backdrop-filter
+   menjadi induk bagi turunannya yang position:fixed. */
+.topbar{background:var(--bg2);backdrop-filter:none;-webkit-backdrop-filter:none;border-bottom:2px solid var(--tegas)}
+.topbar::after{display:none}
+html[data-theme] :is(.topbar,.bottomnav,.sheet__head,.cart__head,.sheet__foot,.cart__foot){box-shadow:none}
+.topbar__store b{font-weight:800}
+.brand__mark{border-radius:10px;box-shadow:none}
+.iconbtn,.mini{border:2px solid var(--tegas2);border-radius:10px}
+
+/* Tombol */
+.btn{border:2px solid var(--tegas2);border-radius:10px}
+.btn--gold{
+  background:var(--gold);color:var(--ink);border-color:var(--tegas);
+  box-shadow:0 3px 0 rgba(0,0,0,.5);
+}
+.btn--gold:active{transform:translateY(3px);box-shadow:none}
+.chip{border:2px solid var(--tegas2);border-radius:8px;height:38px;font-weight:700}
+.chip.is-on{background:var(--gold);color:var(--ink);border-color:var(--tegas)}
+.input{background:var(--surface2);border:2px solid var(--tegas2);border-radius:10px}
+.input:focus{background:var(--surface2);border-color:var(--gold);box-shadow:none}
+
+/* Menu samping (laptop/tablet >= 900px): ikon di atas, tulisan di bawah, yang aktif
+   jadi balok penuh. Berada di bawah bilah atas, bukan menimpanya. */
+@media(min-width:900px){
+  .tabs{
+    position:fixed;left:0;top:var(--topbar-h);bottom:0;z-index:35;width:var(--sidebar-w);
+    flex-direction:column;gap:8px;padding:12px 10px;
+    background:var(--bg2);border:0;border-right:2px solid var(--tegas);border-radius:0;
+  }
+  .tabs button{
+    flex-direction:column;justify-content:center;gap:6px;height:74px;padding:0;width:100%;
+    border:2px solid transparent;border-radius:10px;font-size:11.5px;font-weight:700;letter-spacing:.02em;
+  }
+  .tabs button svg{width:23px;height:23px}
+  .tabs button:hover{border-color:var(--tegas2)}
+  .tabs button.is-on{background:var(--gold);color:var(--ink);border-color:var(--tegas);box-shadow:0 3px 0 rgba(0,0,0,.5)}
+  .main{width:auto;max-width:none;margin:0 14px 0 calc(var(--sidebar-w) + 14px)}
+  .view:not(#view-kasir){max-width:920px}
+  /* Keping "masuk keranjang" dulu di pojok kiri bawah layar; sekarang di situ ada menu samping. */
+  .flash{left:calc(var(--sidebar-w) + 22px)}
+}
+
+/* Bilah bawah (ponsel): sekat tegas antar-menu, yang aktif jadi balok penuh. */
+.bottomnav{background:var(--bg2);border-top:2px solid var(--tegas);grid-template-columns:repeat(5,1fr)}   /* Kasir, Produk, Riwayat, Kalkulator, Atur; mode server menyetel 6 lewat JS */
+.bottomnav button{padding:0 2px;font-size:10.5px}
+.bottomnav button{border-right:2px solid var(--tegas2);font-weight:750}
+.bottomnav button:last-child{border-right:0}
+.bottomnav button.is-on{background:var(--gold);color:var(--ink)}
+
+/* Kisi produk: padat, harga di bilah bawah kartu. */
+.pgrid{gap:10px}
+.pcard{border:2px solid var(--tegas2);border-radius:var(--r);padding:10px 11px 0}
+.pcard:active{transform:translateY(2px)}
+.pcard.is-in{border-color:var(--gold);background:var(--surface);box-shadow:inset 0 0 0 1px var(--gold)}
+.pcard__ava{aspect-ratio:auto;height:46px;font-size:20px;border-radius:8px;margin-bottom:8px}
+.pcard__n{font-size:13.5px;font-weight:700}
+.pcard__c{display:none}
+.pcard__p{margin:8px -11px 0;padding:8px 11px;border-top:2px solid var(--tegas2);background:var(--surface2);font-size:15.5px}
+.pcard__b{border-radius:8px;box-shadow:none}
+.pcard__s{border-radius:5px}
+
+/* Rel kategori (laptop lebar): panel berbingkai, yang aktif balok penuh. */
+.rail{padding:8px;background:var(--surface);border:2px solid var(--tegas);border-radius:var(--r);gap:6px}
+.rail button{border:2px solid transparent;border-radius:8px;font-weight:700}
+.rail button.is-on{background:var(--gold);color:var(--ink);border-color:var(--tegas)}
+.rail button.is-on u{background:rgba(0,0,0,.22);color:var(--ink)}
+
+/* Keranjang: tiket pesanan. Total jadi balok yang diapit dua garis tegas. */
+.cart{border:2px solid var(--tegas);box-shadow:none}
+@media(max-width:899px){.cart{border-bottom:0}}
+.cart__head,.sheet__head{border-bottom:2px solid var(--tegas)}
+.cart__head h3{font-size:14px;text-transform:uppercase;letter-spacing:.09em;font-weight:800}
+.cart__count{border:2px solid var(--tegas2);background:none;border-radius:6px}
+.cart__foot,.sheet__foot{border-top:2px solid var(--tegas)}
+.trow{margin:12px -16px 14px;padding:12px 16px;border-top:2px solid var(--tegas);border-bottom:2px solid var(--tegas);background:var(--surface3)}
+.trow b{font-size:28px}
+.stepper{border:2px solid var(--tegas2);border-radius:10px}
+.cartbar{border:2px solid var(--tegas);border-radius:12px;background:var(--surface2);box-shadow:var(--shadow)}
+.flash{border:2px solid var(--tegas);border-radius:12px}
+
+/* Lembar, kunci angka, dan kalkulator */
+.sheet__panel{border:2px solid var(--tegas)}
+.keypad button,.kalk__pad button{border:2px solid var(--tegas2);border-radius:10px}
+.kalk__pad .op{border-color:rgba(var(--aksen-rgb),.6)}
+.kalk__pad .eq{border-color:var(--tegas);box-shadow:0 3px 0 rgba(0,0,0,.5)}
+.kalk__pad .eq:active{transform:translateY(3px);box-shadow:none}
+.paytot,.kalk__layar{border:2px solid var(--tegas)}
+.payin{border-width:2px}
+
+/* Produk dan Riwayat: bingkai panel dan ringkasan ikut tegas. */
+#plist,#rlist{border:2px solid var(--tegas)}
+#plist .item,#rlist .trxrow{border-bottom:2px solid var(--tegas2)}
+#plist .item:last-child,#rlist .trxrow:last-child{border-bottom:0}
+.sum,.setcard,.card-surface{border:2px solid var(--tegas2)}
+.sum.gold{border-color:var(--tegas)}
+.vhead h2{text-transform:uppercase;letter-spacing:.03em;font-weight:800}
+.fab{border:2px solid var(--tegas);box-shadow:0 3px 0 rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
@@ -1199,9 +1322,9 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
       <button data-nav="produk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg>Produk</button>
       <button data-nav="riwayat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Riwayat</button>
       <button data-nav="data" class="hanya-server" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Data</button>
+      <button class="js-kalk" aria-label="Buka kalkulator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="3"/><path d="M8 7h8"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></svg>Kalkulator</button>
       <button data-nav="atur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-2.87 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 2.6 15a1.7 1.7 0 0 0-1.6-1H1a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 2.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 7 4.6h.09A1.7 1.7 0 0 0 8 3V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.09a1.7 1.7 0 0 0 1.6 1.01H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>Atur</button>
     </nav>
-    <button class="iconbtn" id="kalkBtn" title="Kalkulator" aria-label="Buka kalkulator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="3"/><path d="M8 7h8"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></svg></button>
     <button class="iconbtn" id="themeBtn" title="Ganti tema"></button>
   </header>
 
@@ -1388,6 +1511,7 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
     <button data-nav="produk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg>Produk</button>
     <button data-nav="riwayat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>Riwayat</button>
     <button data-nav="data" class="hanya-server" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Data</button>
+    <button class="js-kalk" aria-label="Buka kalkulator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="3"/><path d="M8 7h8"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></svg>Kalkulator</button>
     <button data-nav="atur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>Atur</button>
   </nav>
 </div>
@@ -3328,7 +3452,10 @@ function kRender(){
   }).join('');
 }
 
-$('#kalkBtn').addEventListener('click', function(){ openSheet('#kalkSheet'); kRender(); });
+/* Menunya ada dua (samping di laptop, bawah di ponsel), jadi dipasang lewat kelas. */
+$$('.js-kalk').forEach(function(b){
+  b.addEventListener('click', function(){ openSheet('#kalkSheet'); kRender(); });
+});
 $('#kalkPad').addEventListener('click', function(e){
   var b = e.target.closest ? e.target.closest('[data-kk]') : null;
   if(b) kTekan(b.getAttribute('data-kk'));
@@ -4029,7 +4156,7 @@ function nyalakanMenuData(nyala){
   $$('.hanya-server').forEach(function(b){ b.hidden = !nyala; });
   /* Nav bawah punya jumlah kolom tetap; kalau tidak ikut diubah, tombol kelima
      menumpuk keluar dari barisnya. */
-  $('#bnav').style.gridTemplateColumns = 'repeat(' + (nyala ? 5 : 4) + ',1fr)';
+  $('#bnav').style.gridTemplateColumns = 'repeat(' + (nyala ? 6 : 5) + ',1fr)';   /* + Kalkulator */
   syncStoreBar();
 }
 
