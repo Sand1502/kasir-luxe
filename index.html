@@ -322,7 +322,11 @@ textarea.input{min-height:74px;resize:vertical}
 .mock__top b{font-size:13px}
 .mock__top span{font-size:10px;color:var(--txt3);letter-spacing:.1em;font-weight:700}
 .mrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
-.mrow__ava{width:32px;height:32px;border-radius:9px;background:var(--surface3);display:grid;place-items:center;font-size:15px;flex:0 0 auto}
+/* Inisial berwarna, sama dengan kotak barang di aplikasinya: contoh di beranda
+   tidak boleh memakai emoji padahal aplikasinya sendiri sudah membuangnya. */
+.mrow__ava{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:12px;font-weight:800;letter-spacing:-.02em;flex:0 0 auto;
+  background:hsl(var(--h) 42% 50% / .14);color:hsl(var(--h) 55% 66%)}
+html[data-theme="light"] .mrow__ava{background:hsl(var(--h) 55% 46% / .12);color:hsl(var(--h) 48% 36%)}
 .mrow__n{flex:1;min-width:0}
 .mrow__n b{display:block;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mrow__n span{font-size:10.5px;color:var(--txt3)}
@@ -1015,6 +1019,10 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
 .trxrow__t i,.line__sub,.item__b .pri,.pcard__p{font-variant-numeric:tabular-nums}
 .sum{background:var(--surface2)}
 .sum.gold{border-color:rgba(var(--aksen-rgb),.34)}
+
+/* Lencana "Tersimpan otomatis" di contoh beranda dulu menimpa angka KEMBALIAN
+   di layar sempit. Diturunkan ke tepi bawah perangkat supaya tidak menutup apa pun. */
+.mock__float{bottom:-16px;right:22px}
 </style>
 </head>
 <body>
@@ -1061,9 +1069,9 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
         <div class="mock__body">
           <div class="mock__screen">
             <div class="mock__top"><b>Keranjang</b><span>3 ITEM</span></div>
-            <div class="mrow"><div class="mrow__ava">🍚</div><div class="mrow__n"><b>Beras Premium 5 kg</b><span>Rp 72.500,00 × 2 pcs</span></div><div class="mrow__p money">145.000,00</div></div>
-            <div class="mrow"><div class="mrow__ava">🌱</div><div class="mrow__n"><b>Pupuk NPK 1 kg</b><span>Rp 18.000,00 × 3 pcs</span></div><div class="mrow__p money">54.000,00</div></div>
-            <div class="mrow" style="border-bottom:0"><div class="mrow__ava">🥚</div><div class="mrow__n"><b>Telur Ayam 1 kg</b><span>Rp 29.000,00 × 1 pcs</span></div><div class="mrow__p money">29.000,00</div></div>
+            <div class="mrow"><div class="mrow__ava" style="--h:347">BP</div><div class="mrow__n"><b>Beras Premium 5 kg</b><span>Rp 72.500,00 × 2 pcs</span></div><div class="mrow__p money">145.000,00</div></div>
+            <div class="mrow"><div class="mrow__ava" style="--h:341">PN</div><div class="mrow__n"><b>Pupuk NPK 1 kg</b><span>Rp 18.000,00 × 3 pcs</span></div><div class="mrow__p money">54.000,00</div></div>
+            <div class="mrow" style="border-bottom:0"><div class="mrow__ava" style="--h:411">TA</div><div class="mrow__n"><b>Telur Ayam 1 kg</b><span>Rp 29.000,00 × 1 pcs</span></div><div class="mrow__p money">29.000,00</div></div>
             <div class="mtot"><span>TOTAL · 6 PCS</span><b class="money">Rp 228.000,00</b></div>
             <div class="mkembali"><span>KEMBALIAN</span><b class="money">Rp 22.000,00</b></div>
           </div>
