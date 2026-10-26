@@ -3,17 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0A0C0F">
+<meta name="theme-color" content="#111219">
 <meta name="description" content="KASIR LUXE — aplikasi kasir (Point of Sale) satu file, offline, siap pakai di Android.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kasir Luxe">
 <title>KASIR LUXE — Point of Sale</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230A0C0F'/%3E%3Cpath d='M16 22h32M16 32h32M16 42h20' stroke='%23E3C27E' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23111219'/%3E%3Cpath d='M16 22h32M16 32h32M16 42h20' stroke='%23F5B183' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
 /* ============================== TOKENS ============================== */
-/* ── NEON UNGU (permintaan pemilik, 5/9/2026) ─────────────────────────────
+/* ── DUSK RINGAN (26/10/2026) — menggantikan neon ungu ───────────────────
+   Palet di bawah sekarang senja: aksen peach-koral di atas panel gelap
+   kebiruan. Wujud lengkapnya ada di blok "TEMA DUSK RINGAN" di akhir <style>.
+   Catatan di bawah ini tentang neon ungu (5/9/2026) tetap benar soal CARA
+   mengganti warna: yang diubah nilai variabelnya, bukan namanya.
+
    Warna aksennya dulu emas. Namanya masih --gold di ratusan tempat, jadi yang
    diubah NILAINYA, bukan namanya: --gold dan kawan-kawan sekarang menunjuk ke
    --aksen. Mengganti nama variabel di ratusan tempat sekaligus adalah cara
@@ -26,43 +31,52 @@
    pendar yang tidak sama, dan layarnya terlihat kotor tanpa ada yang bisa
    menunjuk sebabnya. */
 :root{
-  --aksen:#C08CFF; --aksen2:#8B5CF6; --aksensoft:rgba(176,110,255,.14);
-  --nyala:0 0 12px rgba(176,110,255,.42);
-  --nyala-kuat:0 0 20px rgba(176,110,255,.60);
+  /* --aksen-rgb dipecah jadi angka telanjang supaya semua rgba(...) yang dulu
+     menulis warna aksen langsung di tempatnya (garis, bayangan, denyut kartu)
+     ikut berganti dari satu tempat ini. */
+  --aksen:#F5B183; --aksen2:#EB8C7C; --aksen-rgb:245,177,131; --aksensoft:rgba(var(--aksen-rgb),.13);
+  --nyala:0 0 14px -2px rgba(var(--aksen-rgb),.30);
+  --nyala-kuat:0 10px 26px -12px rgba(235,140,124,.62);
+  /* Periwinkle: pasangan dingin dari aksen hangat. Dipakai di tombol yang
+     duduk di atas gradien senja, tempat aksen peach akan hilang. */
+  --dingin:#B3C0FF; --dingin2:#97A8F5;
 
-  --bg:#08060D; --bg2:#0C0914;
-  --surface:#120F1E; --surface2:#181327; --surface3:#211934;
-  /* Garis penegas ikut menyala, bukan abu-abu netral. */
-  --line:rgba(176,110,255,.17); --line2:rgba(176,110,255,.34);
-  --txt:#F0EAFB; --txt2:#A99BC4; --txt3:#7A6D93;
+  --bg:#111219; --bg2:#15161F;
+  --surface:#1A1C27; --surface2:#212334; --surface3:#2A2D42;
+  --line:rgba(196,204,255,.10); --line2:rgba(196,204,255,.21);
+  --txt:#F4F1F7; --txt2:#BDBACD; --txt3:#8D8AA6;
   --gold:var(--aksen); --gold2:var(--aksen2); --goldsoft:var(--aksensoft);
-  --ok:#4ADE80; --oksoft:rgba(74,222,128,.13);
-  --warn:#FBBF24; --danger:#FB7185; --dangersoft:rgba(251,113,133,.13);
-  --ink:#1B0B33;
+  --ok:#5EDC9B; --oksoft:rgba(94,220,155,.13);
+  --warn:#FFC857; --danger:#FF8F8F; --dangersoft:rgba(255,143,143,.13);
+  --ink:#2A1420;
+  /* Tinta tetap untuk teks di atas gradien senja. --ink berubah jadi putih di
+     mode terang (teks di atas tombol pekat), jadi tidak bisa dipakai di sini:
+     langit senja selalu terang, di mode mana pun. */
+  --tinta:#2A1420;
+  --senja-1:#F9CBA3; --senja-2:#F2A58B; --senja-3:#D98BA0; --senja-4:#9A82BA;
   --shadow:0 24px 60px -28px rgba(0,0,0,.92);
   --shadow-sm:0 6px 18px -10px rgba(0,0,0,.82);
   --r:16px; --rs:11px; --rl:24px;
   --nav-h:64px;
 }
 html[data-theme="light"]{
-  /* Neon tidak menyala di atas putih - yang bersinar di layar terang cuma
-     terlihat kotor. Jadi di mode terang ungunya dipakai sebagai warna pekat,
-     dan pendarnya hampir dimatikan. Memaksakan pendar yang sama di kedua mode
-     akan membuat salah satunya selalu jelek. */
-  --aksen:#6D28D9; --aksen2:#7C3AED; --aksensoft:rgba(109,40,217,.12);
-  --nyala:0 0 8px rgba(109,40,217,.18);
-  --nyala-kuat:0 0 14px rgba(109,40,217,.26);
+  /* Peach terang tidak terbaca sebagai teks di atas putih (harga dan total
+     dipakai sebagai teks lewat --gold). Di mode terang aksennya turun jadi
+     terakota pekat, dan tombolnya memakai teks putih. */
+  --aksen:#C4532D; --aksen2:#A8421F; --aksen-rgb:196,83,45; --aksensoft:rgba(var(--aksen-rgb),.11);
+  --nyala:0 0 8px rgba(var(--aksen-rgb),.16);
+  --nyala-kuat:0 8px 20px -10px rgba(168,66,31,.5);
 
-  --bg:#F5F2FA; --bg2:#FFFFFF;
-  --surface:#FFFFFF; --surface2:#FAF8FE; --surface3:#F1ECF9;
-  --line:rgba(109,40,217,.16); --line2:rgba(109,40,217,.30);
-  --txt:#160D24; --txt2:#5B5170; --txt3:#8A82A0;
+  --bg:#FBF4EE; --bg2:#FFFFFF;
+  --surface:#FFFFFF; --surface2:#FCF7F2; --surface3:#F5EBE3;
+  --line:rgba(90,50,70,.13); --line2:rgba(90,50,70,.26);
+  --txt:#2A1420; --txt2:#6A5560; --txt3:#8F7B86;
   --gold:var(--aksen); --gold2:var(--aksen2); --goldsoft:var(--aksensoft);
   --ok:#0E9F5B; --oksoft:rgba(14,159,91,.12);
   --warn:#B4740A; --danger:#D9364C; --dangersoft:rgba(217,54,76,.1);
   --ink:#FFFFFF;
-  --shadow:0 22px 50px -30px rgba(22,13,36,.45);
-  --shadow-sm:0 4px 14px -8px rgba(22,13,36,.4);
+  --shadow:0 22px 50px -30px rgba(42,20,32,.42);
+  --shadow-sm:0 4px 14px -8px rgba(42,20,32,.38);
 }
 
 /* ── GARIS PENEGAS YANG MENYALA ───────────────────────────────────────────
@@ -70,10 +84,10 @@ html[data-theme="light"]{
    bilah atas, bilah bawah, kepala keranjang - bukan di setiap kotak. Neon yang
    dipasang di mana-mana berhenti menegaskan apa pun: kalau semuanya menyala,
    tidak ada yang menonjol, dan layarnya cuma jadi silau. */
-.topbar{box-shadow:0 1px 0 var(--line2), 0 6px 18px -14px rgba(176,110,255,.55)}
-.bottomnav{box-shadow:0 -1px 0 var(--line2), 0 -6px 18px -14px rgba(176,110,255,.55)}
-.sheet__head,.cart__head{box-shadow:0 1px 0 var(--line2), 0 5px 14px -12px rgba(176,110,255,.6)}
-.sheet__foot,.cart__foot{box-shadow:0 -1px 0 var(--line2), 0 -5px 14px -12px rgba(176,110,255,.6)}
+.topbar{box-shadow:0 1px 0 var(--line2), 0 6px 18px -14px rgba(var(--aksen-rgb),.55)}
+.bottomnav{box-shadow:0 -1px 0 var(--line2), 0 -6px 18px -14px rgba(var(--aksen-rgb),.55)}
+.sheet__head,.cart__head{box-shadow:0 1px 0 var(--line2), 0 5px 14px -12px rgba(var(--aksen-rgb),.6)}
+.sheet__foot,.cart__foot{box-shadow:0 -1px 0 var(--line2), 0 -5px 14px -12px rgba(var(--aksen-rgb),.6)}
 .sheet__grab,.cart__grab{box-shadow:var(--nyala)}
 .cartbar{box-shadow:var(--shadow), var(--nyala)}
 .btn--gold{box-shadow:var(--nyala-kuat)}
@@ -121,7 +135,7 @@ p{margin:0}
 .brand__mark{
   width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto;
   background:linear-gradient(150deg,var(--gold),var(--gold2));color:var(--ink);
-  box-shadow:0 6px 18px -8px rgba(201,162,77,.7);
+  box-shadow:0 6px 18px -8px rgba(var(--aksen-rgb),.7);
 }
 .brand__mark svg{width:20px;height:20px}
 .brand__txt{font-size:16px;line-height:1}
@@ -136,7 +150,7 @@ p{margin:0}
 }
 .btn:active{transform:scale(.975)}
 .btn svg{width:18px;height:18px;flex:0 0 auto}
-.btn--gold{background:linear-gradient(150deg,var(--gold),var(--gold2));color:var(--ink);border-color:transparent;box-shadow:0 12px 26px -14px rgba(201,162,77,.85)}
+.btn--gold{background:linear-gradient(150deg,var(--gold),var(--gold2));color:var(--ink);border-color:transparent;box-shadow:0 12px 26px -14px rgba(var(--aksen-rgb),.85)}
 .btn--ghost{background:transparent}
 .btn--danger{background:var(--dangersoft);color:var(--danger);border-color:transparent}
 .btn--block{width:100%}
@@ -148,7 +162,7 @@ p{margin:0}
   background:var(--surface2);border:1px solid var(--line);color:var(--txt2);
   font-size:13px;font-weight:600;white-space:nowrap;transition:.15s;
 }
-.chip.is-on{background:var(--goldsoft);border-color:rgba(227,194,126,.35);color:var(--gold)}
+.chip.is-on{background:var(--goldsoft);border-color:rgba(var(--aksen-rgb),.35);color:var(--gold)}
 .chip:active{transform:scale(.96)}
 
 .field{display:block;margin-bottom:14px}
@@ -170,10 +184,10 @@ p{margin:0}
   background:
     linear-gradient(var(--surface2),var(--surface2)) padding-box,
     linear-gradient(135deg,
-      rgba(176,110,255,.34) 0%,
-      rgba(176,110,255,.06) 38%,
-      rgba(176,110,255,.06) 62%,
-      rgba(176,110,255,.34) 100%) border-box;
+      rgba(var(--aksen-rgb),.34) 0%,
+      rgba(var(--aksen-rgb),.06) 38%,
+      rgba(var(--aksen-rgb),.06) 62%,
+      rgba(var(--aksen-rgb),.34) 100%) border-box;
   border:1px solid transparent;color:var(--txt);
   transition:box-shadow .22s, background .22s, transform .22s;
 }
@@ -183,10 +197,10 @@ p{margin:0}
     linear-gradient(var(--surface3),var(--surface3)) padding-box,
     linear-gradient(135deg,
       var(--aksen) 0%,
-      rgba(176,110,255,.30) 45%,
-      rgba(176,110,255,.30) 55%,
+      rgba(var(--aksen-rgb),.30) 45%,
+      rgba(var(--aksen-rgb),.30) 55%,
       var(--aksen) 100%) border-box;
-  box-shadow:0 0 0 3px rgba(176,110,255,.13), var(--nyala);
+  box-shadow:0 0 0 3px rgba(var(--aksen-rgb),.13), var(--nyala);
 }
 .input::placeholder{color:var(--txt3)}
 textarea.input{min-height:74px;resize:vertical}
@@ -226,8 +240,8 @@ textarea.input{min-height:74px;resize:vertical}
   background-image:linear-gradient(180deg,
     transparent 0%, var(--aksen) 22%, var(--aksen) 78%, transparent 100%);
 }
-.field:focus-within::before{opacity:1;transform:translateX(-2px);border-color:var(--aksen);box-shadow:-2px 0 10px -4px rgba(176,110,255,.75)}
-.field:focus-within::after{opacity:1;transform:translateX(2px);border-color:var(--aksen);box-shadow:2px 0 10px -4px rgba(176,110,255,.75)}
+.field:focus-within::before{opacity:1;transform:translateX(-2px);border-color:var(--aksen);box-shadow:-2px 0 10px -4px rgba(var(--aksen-rgb),.75)}
+.field:focus-within::after{opacity:1;transform:translateX(2px);border-color:var(--aksen);box-shadow:2px 0 10px -4px rgba(var(--aksen-rgb),.75)}
 /* Di layar sempit rusuknya tidak muat di luar kotak dan akan terpotong tepi
    layar. Lebih baik hilang sama sekali daripada tampil separuh. */
 @media(max-width:400px){ .field::before,.field::after{display:none} }
@@ -259,7 +273,7 @@ textarea.input{min-height:74px;resize:vertical}
   background:
     radial-gradient(900px 520px at 8% -12%, var(--goldsoft), transparent 62%),
     radial-gradient(720px 480px at 96% -6%, rgba(74,222,128,.09), transparent 60%),
-    radial-gradient(700px 620px at 50% 118%, rgba(227,194,126,.07), transparent 62%);
+    radial-gradient(700px 620px at 50% 118%, rgba(var(--aksen-rgb),.07), transparent 62%);
 }
 .landing::after{
   content:'';position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.5;
@@ -278,7 +292,7 @@ textarea.input{min-height:74px;resize:vertical}
 @media(min-width:1000px){.hero{grid-template-columns:1.06fr .94fr;padding:64px 0 44px;gap:56px}}
 .pill{
   display:inline-flex;align-items:center;gap:9px;height:32px;padding:0 14px;border-radius:999px;
-  background:var(--goldsoft);border:1px solid rgba(227,194,126,.24);
+  background:var(--goldsoft);border:1px solid rgba(var(--aksen-rgb),.24);
   color:var(--gold);font-size:11.5px;font-weight:750;letter-spacing:.13em;text-transform:uppercase;
 }
 .pill i{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px var(--oksoft)}
@@ -437,7 +451,7 @@ textarea.input{min-height:74px;resize:vertical}
   text-decoration:none;font-size:11px;font-weight:750;color:var(--txt3);flex:0 0 auto;
   background:var(--surface2);padding:2px 7px;border-radius:6px;font-variant-numeric:tabular-nums;
 }
-.rail button.is-on u{background:rgba(227,194,126,.18);color:var(--gold)}
+.rail button.is-on u{background:rgba(var(--aksen-rgb),.18);color:var(--gold)}
 
 /* ---------- BAR CARI + KATEGORI ---------- */
 /* Menempel di bawah topbar supaya kasir bisa ganti kategori atau mencari tanpa
@@ -471,13 +485,13 @@ textarea.input{min-height:74px;resize:vertical}
 .pcard:active{transform:scale(.965)}
 /* Yang sudah masuk keranjang harus terbaca dari jauh, bukan cuma dari garis tepi.
    Kasir memindai kisi ini sambil melayani orang — tidak sempat menatapnya. */
-.pcard.is-in{border-color:rgba(227,194,126,.5);background:linear-gradient(168deg,var(--goldsoft),var(--surface) 64%)}
+.pcard.is-in{border-color:rgba(var(--aksen-rgb),.5);background:linear-gradient(168deg,var(--goldsoft),var(--surface) 64%)}
 .pcard.is-out{opacity:.45}
 .pcard.is-out .pcard__ava{filter:grayscale(1)}
 /* Denyut sesudah diketuk: kartunya sendiri yang menjawab, jadi mata tidak perlu
    pindah ke sudut layar dulu untuk tahu ketukannya kebaca. */
 .pcard.is-hit{animation:hit .5s ease-out}
-@keyframes hit{from{box-shadow:0 0 0 0 rgba(227,194,126,.5)}to{box-shadow:0 0 0 13px rgba(227,194,126,0)}}
+@keyframes hit{from{box-shadow:0 0 0 0 rgba(var(--aksen-rgb),.5)}to{box-shadow:0 0 0 13px rgba(var(--aksen-rgb),0)}}
 .pcard__ava{
   position:relative;width:100%;aspect-ratio:1.9/1;border-radius:12px;display:grid;place-items:center;
   font-size:29px;margin-bottom:9px;
@@ -595,7 +609,7 @@ html[data-theme="light"] .cartbar__av span{background:hsl(var(--h) 55% 46% / .16
   position:fixed;z-index:70;left:10px;right:10px;
   bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 74px);
   display:flex;align-items:center;gap:11px;padding:9px 9px 9px 12px;border-radius:15px;
-  background:var(--surface3);border:1px solid rgba(227,194,126,.34);box-shadow:var(--shadow);
+  background:var(--surface3);border:1px solid rgba(var(--aksen-rgb),.34);box-shadow:var(--shadow);
   opacity:0;transform:translateY(14px) scale(.97);pointer-events:none;
   transition:opacity .18s,transform .26s cubic-bezier(.2,1.3,.35,1);
 }
@@ -763,7 +777,7 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
   position:fixed;right:16px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);z-index:44;
   height:52px;padding:0 20px;border-radius:16px;display:inline-flex;align-items:center;gap:8px;
   background:linear-gradient(150deg,var(--gold),var(--gold2));color:var(--ink);font-weight:750;font-size:14.5px;
-  box-shadow:0 16px 34px -16px rgba(201,162,77,.95);transition:.14s;
+  box-shadow:0 16px 34px -16px rgba(var(--aksen-rgb),.95);transition:.14s;
 }
 .fab:active{transform:scale(.95)}
 .fab svg{width:19px;height:19px}
@@ -779,7 +793,7 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
 .togrow__b span{display:block;font-size:12px;color:var(--txt3);margin-top:2px}
 .switch{width:48px;height:28px;border-radius:99px;background:var(--surface3);border:1px solid var(--line);position:relative;flex:0 0 auto;transition:.2s}
 .switch::after{content:'';position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--txt3);transition:.22s cubic-bezier(.2,.9,.3,1)}
-.switch.on{background:var(--goldsoft);border-color:rgba(227,194,126,.4)}
+.switch.on{background:var(--goldsoft);border-color:rgba(var(--aksen-rgb),.4)}
 .switch.on::after{transform:translateX(20px);background:var(--gold)}
 
 /* ============================== TOAST & DIALOG ============================== */
@@ -899,7 +913,7 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
   display:inline-block;
   font-size:9.5px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;
   padding:2px 7px;border-radius:6px;margin-left:7px;vertical-align:2px;
-  background:var(--goldsoft);color:var(--gold);border:1px solid rgba(227,194,126,.3);
+  background:var(--goldsoft);color:var(--gold);border:1px solid rgba(var(--aksen-rgb),.3);
 }
 
 /* ============================== PRINT ============================== */
@@ -914,6 +928,93 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
   #paper{max-width:none!important;width:72mm!important;box-shadow:none!important;border-radius:0!important;padding:0!important;font-size:11px!important}
   @page{size:80mm auto;margin:4mm}
 }
+
+/* ============================== TEMA DUSK RINGAN ============================== */
+/* Dusk dipakai SEBAGIAN, bukan seluruhnya. Aturannya (disepakati dengan pemilik,
+   26/10/2026):
+   - gradien senja hanya di tiga tempat: beranda, kotak total di layar bayar, dan
+     kotak ajakan di dasar beranda;
+   - blur kaca hanya di dua tempat: bilah atas dan lembar yang naik dari bawah.
+     Kisi produk yang bergulir di bawah elemen ber-blur terus-menerus adalah
+     penyebab klasik HP kelas bawah tersendat, jadi bilah bawah dan tirai gelap
+     sengaja TIDAK memakainya;
+   - kisi produk, keranjang, Produk, dan Riwayat tetap panel gelap solid;
+   - tanpa foto dan tanpa font tambahan — berkas ini harus tetap jalan offline
+     sebagai satu file. */
+
+/* Bilah atas: blur sudah ada di aturan APP SHELL. Yang ditambah cuma garis senja
+   tipis di tepi bawah, satu-satunya "tanda tangan" Dusk di layar kerja. */
+.topbar{border-bottom:0;box-shadow:0 1px 0 var(--line)}
+.topbar::after{
+  content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--senja-2) 22%,var(--senja-3) 62%,transparent);
+  opacity:.75;
+}
+.bottomnav{background:var(--bg2);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:0 -1px 0 var(--line)}
+.scrim,.sheet__scrim{background:rgba(14,10,22,.74);backdrop-filter:none;-webkit-backdrop-filter:none}
+
+/* Lembar bawah: kaca. Latarnya tirai gelap tanpa blur, jadi yang kabur adalah
+   kisi produk di balik lembar itu, bukan seluruh layar. Keranjang SENGAJA tidak
+   ikut: itu yang ditatap kasir sepanjang antrean, dan isinya harus solid. */
+.sheet__panel{
+  background:color-mix(in srgb,var(--surface) 90%,transparent);
+  backdrop-filter:blur(22px) saturate(1.35);-webkit-backdrop-filter:blur(22px) saturate(1.35);
+}
+
+/* ---------- BERANDA: langit senja ---------- */
+/* Titik berhenti gradiennya dalam px, bukan persen: tinggi beranda berbeda jauh
+   antara HP dan laptop, dan senjanya harus selesai di bawah tombol ajakan —
+   teks tinta di atas bagian yang sudah gelap tidak terbaca. */
+.landing::before{
+  background:linear-gradient(180deg,var(--senja-1) 0,var(--senja-2) 300px,var(--senja-3) 560px,var(--senja-4) 740px,var(--bg) 960px);
+}
+/* Kisi garis dari tema lama tidak punya tempat di atas langit. */
+.landing::after{display:none}
+.lnav .brand,.hero h1{color:var(--tinta)}
+.lnav .brand__mark{background:var(--tinta);color:var(--senja-1);box-shadow:none}
+.lnav .brand__txt small{color:rgba(42,20,32,.62)}
+.lnav__links{color:rgba(42,20,32,.72)}
+.pill{background:rgba(42,20,32,.08);border-color:rgba(42,20,32,.2);color:var(--tinta)}
+.hero h1 em{background:linear-gradient(100deg,#6B2D5C,#3E2A6B);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.lead{color:rgba(42,20,32,.8)}
+/* Tombol utama di atas senja berganti periwinkle: peach di atas peach hilang. */
+.lnav .btn--gold,.hero .btn--gold,.ctabox .btn--gold{
+  background:linear-gradient(150deg,var(--dingin),var(--dingin2));color:#1B2050;
+  box-shadow:0 12px 26px -14px rgba(60,40,120,.6);
+}
+.hero .btn:not(.btn--gold){background:rgba(255,255,255,.32);border-color:rgba(42,20,32,.24);color:var(--tinta)}
+
+.ctabox{
+  background:linear-gradient(160deg,var(--senja-1),var(--senja-2) 55%,var(--senja-3));
+  border-color:transparent;color:var(--tinta);
+}
+.ctabox h2{color:var(--tinta)}
+.ctabox p{color:rgba(42,20,32,.8)}
+
+/* ---------- LAYAR BAYAR: total di atas senja ---------- */
+.paytot{
+  padding:22px 16px 20px;margin-bottom:16px;border-radius:var(--r);color:var(--tinta);
+  background:linear-gradient(160deg,var(--senja-1),var(--senja-2) 58%,var(--senja-3));
+}
+.paytot span,.paytot small{color:rgba(42,20,32,.72)}
+.paytot b{color:var(--tinta)}
+
+/* ---------- PANEL GELAP BERGAYA TABEL ---------- */
+/* Produk dan Riwayat jadi satu panel dengan baris bergaris-rambut, bukan
+   tumpukan kartu terpisah. Jarak bawah dipindah dari padding ke margin: padding
+   .list (penyelamat FAB) akan ikut terbungkus bingkai panelnya. */
+#plist,#rlist{
+  gap:0;padding-bottom:0;margin-bottom:78px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+}
+@media(min-width:900px){#plist,#rlist{margin-bottom:16px}}
+#plist .item,#rlist .trxrow{background:none;border:0;border-radius:0;border-bottom:1px solid var(--line)}
+#plist .item:last-child,#rlist .trxrow:last-child{border-bottom:0}
+#plist .item:active,#rlist .trxrow:active{background:var(--goldsoft)}
+/* Angka rata kanan dan sama lebar, supaya kolom nominal bisa dipindai lurus. */
+.trxrow__t i,.line__sub,.item__b .pri,.pcard__p{font-variant-numeric:tabular-nums}
+.sum{background:var(--surface2)}
+.sum.gold{border-color:rgba(var(--aksen-rgb),.34)}
 </style>
 </head>
 <body>
@@ -1503,15 +1604,16 @@ function parseMoney(v){
    lewat warna sebelum sempat membaca tulisannya. Itu sebabnya warnanya tidak
    dibuat seragam.
 
-   Tapi acakan penuh 0-360 derajat memberi pelangi, dan pemilik minta neon UNGU
-   (5/9/2026). Jadi acakannya dikurung ke keluarga ungu: 252-322 derajat, dari
-   nila sampai magenta. Tetap ada 70 derajat untuk membedakan 169 barang,
+   Tapi acakan penuh 0-360 derajat memberi pelangi. Dulu dikurung ke keluarga
+   ungu (neon ungu, 5/9/2026); sejak Dusk ringan (26/10/2026) dikurung ke
+   keluarga senja: 340-419 derajat (hsl() membungkus di atas 360), dari mawar
+   lewat koral sampai amber. Tetap ada 80 derajat untuk membedakan 169 barang,
    sementara seluruh layar tetap satu keluarga warna.
 
    Dikurung, BUKAN diseragamkan: dengan 169 barang di satu kisi, kartu yang
    semuanya kembar membuat mata harus membaca satu per satu - persis pekerjaan
    yang seharusnya dihemat oleh warna. */
-var HUE_AWAL = 252, HUE_RENTANG = 70;
+var HUE_AWAL = 340, HUE_RENTANG = 80;
 function hue(str){
   var h = 0, i; str = String(str||'');
   for(i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) % 360; }
@@ -2333,7 +2435,7 @@ function applyTheme(){
   document.documentElement.setAttribute('data-theme', t);
   $('#themeBtn').innerHTML = t === 'dark' ? SUN : MOON;
   var m = document.querySelector('meta[name="theme-color"]');
-  if(m) m.setAttribute('content', t === 'dark' ? '#0A0C0F' : '#F4F4F1');
+  if(m) m.setAttribute('content', t === 'dark' ? '#111219' : '#FBF4EE');
 }
 $('#themeBtn').addEventListener('click', function(){
   S.settings.theme = (S.settings.theme === 'dark' ? 'light' : 'dark');
