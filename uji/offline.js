@@ -301,6 +301,25 @@ function ok(nama, syarat, detail) {
     await cl.close();
   }
 
+  // ══════════ 9. BERANDA: GAMBAR WARUNG + KASIR ══════════
+  console.log('\n[9] BERANDA — gambar warung kelontong');
+  for (const [w, h] of [[320, 700], [390, 844], [1280, 800]]) {
+    const c = await browser.newContext({ viewport: { width: w, height: h } });
+    const q = await c.newPage();
+    await q.goto(URL);
+    const info = await q.evaluate(() => {
+      const s = document.querySelector('.hero .scene').getBoundingClientRect();
+      const t = document.querySelector('.hero h1').getBoundingClientRect();
+      const m = document.querySelector('.hero .mock').getBoundingClientRect();
+      return { sW: Math.round(s.width), sTop: Math.round(s.top), sBottom: Math.round(s.bottom), hTop: Math.round(t.top),
+               mTop: Math.round(m.top), melar: document.documentElement.scrollWidth - window.innerWidth };
+    });
+    ok('beranda ' + w + 'px: gambar warung tampil & tidak melar', info.sW > 200 && info.melar <= 0, JSON.stringify(info));
+    if (w < 1000) ok('beranda ' + w + 'px: gambar warung di ATAS judul (kesan pertama)', info.sBottom <= info.hTop, JSON.stringify(info));
+    else ok('beranda ' + w + 'px: contoh keranjang menimpa sudut gambar', info.mTop < info.sBottom, JSON.stringify(info));
+    await c.close();
+  }
+
   await browser.close();
   console.log('\n' + (gagal === 0 ? '✓ SEMUA UJI LULUS' : '✗ ' + gagal + ' UJI GAGAL'));
   process.exit(gagal === 0 ? 0 : 1);
