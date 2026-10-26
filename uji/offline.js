@@ -232,6 +232,58 @@ function ok(nama, syarat, detail) {
     await c.close();
   }
 
+  // ══════════ 8. KALKULATOR MANUAL ══════════
+  // Hitungannya dibuat sendiri (tanpa eval), jadi yang diuji adalah perilakunya:
+  // urutan operator, persen gaya ponsel, pembulatan, dan penjagaan galat.
+  console.log('\n[8] KALKULATOR MANUAL');
+  {
+    const c = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+    const q = await c.newPage();
+    const galatK = [];
+    q.on('pageerror', e => galatK.push(String(e)));
+    q.on('console', m => { if (m.type() === 'error') galatK.push('console: ' + m.text()); });
+    await q.goto(URL);
+    await q.click('[data-open-app]');
+    await q.click('#kalkBtn');
+    ok('kalkulator terbuka dari bilah atas', await q.locator('#kalkSheet.open').count() === 1);
+    const tekan = async (urut) => { for (const k of urut.split(' ')) await q.click('#kalkPad [data-kk="' + k + '"]'); };
+    const layar = async () => (await q.locator('#kalkHasil').textContent()).trim();
+    const kasus = [
+      ['5 + 3 * 2 =',         '11',        '× didahulukan dari +'],
+      ['1 0 0 0 0 0 + 2 5 0 0 0 =', '125.000', 'titik ribuan gaya Indonesia'],
+      ['0 , 1 + 0 , 2 =',     '0,3',       '0,1 + 0,2 tidak jadi 0,30000000000000004'],
+      ['1 0 / 4 =',           '2,5',       'koma desimal'],
+      ['5 / 0 =',             'Tidak bisa dibagi nol', 'bagi nol ditolak'],
+      ['2 0 0 + 1 0 % =',     '220',       '200 + 10% = 220'],
+      ['2 0 0 - 1 0 % =',     '180',       '200 − 10% = 180'],
+      ['5 0 * 1 0 % =',       '5',         '50 × 10% = 5'],
+      ['1 + 2 = + 3 =',       '6',         'lanjut dari hasil sebelumnya'],
+      ['5 + * 3 =',           '15',        'operator bisa diganti sebelum angka berikutnya'],
+      ['1 2 3 del del',       '1',         'hapus satu angka'],
+      ['0 0 0 7',             '7',         'nol di depan tidak menumpuk'],
+      ['1 0 0 0 - 2 5 0 0 =', '-1.500',    'hasil negatif'],
+    ];
+    for (const [urut, harap, nama] of kasus) {
+      await tekan('C ' + urut);
+      ok('kalkulator: ' + nama, (await layar()) === harap, '"' + (await layar()) + '" (harap "' + harap + '")');
+    }
+    // setelah galat, tombol berikutnya memulai dari nol (tidak macet di pesan galat)
+    await tekan('C 5 / 0 = 7');
+    ok('kalkulator: pulih dari galat', (await layar()) === '7');
+    // papan ketik laptop
+    await q.keyboard.press('Delete');
+    await q.keyboard.type('12,5*4');
+    await q.keyboard.press('Enter');
+    ok('kalkulator: papan ketik 12,5 × 4 = 50', (await layar()) === '50', await layar());
+    // tidak menyentuh keranjang / transaksi
+    const st = await q.evaluate(() => JSON.parse(localStorage.getItem('kasirluxe.v1') || '{}'));
+    ok('kalkulator tidak menulis transaksi', !st.trx || st.trx.length === 0);
+    await q.keyboard.press('Escape');
+    ok('Escape menutup kalkulator', await q.locator('#kalkSheet.open').count() === 0);
+    ok('tanpa galat javascript', galatK.length === 0, galatK.join(' | '));
+    await c.close();
+  }
+
   await browser.close();
   console.log('\n' + (gagal === 0 ? '✓ SEMUA UJI LULUS' : '✗ ' + gagal + ' UJI GAGAL'));
   process.exit(gagal === 0 ? 0 : 1);

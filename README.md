@@ -23,6 +23,7 @@ Buka halamannya, selesai. Tidak ada yang perlu dipasang.
 - **Produk** — daftar barang sendiri: tambah, ubah, hapus
 - **Riwayat** — transaksi yang sudah lewat, lengkap dengan rinciannya
 - **Atur** — nama toko, format angka, dan **cadangan data**
+- **Kalkulator** — ikon kalkulator di bilah atas, untuk hitung-hitungan manual di luar transaksi (ongkos, selisih harga, potongan, bagi rata). Mendahulukan × dan ÷, `%` bekerja seperti kalkulator ponsel (`200 + 10%` = 220), tiga hasil terakhir bisa dipakai lagi, hasilnya bisa disalin, dan di laptop bisa diketik lewat papan ketik. Tidak ada yang disimpan dan tidak menyentuh keranjang atau riwayat
 
 ## Di mana datanya disimpan (mode lokal)
 

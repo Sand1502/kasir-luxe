@@ -1023,6 +1023,44 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
 /* Lencana "Tersimpan otomatis" di contoh beranda dulu menimpa angka KEMBALIAN
    di layar sempit. Diturunkan ke tepi bawah perangkat supaya tidak menutup apa pun. */
 .mock__float{bottom:-16px;right:22px}
+
+/* ---------- KALKULATOR ---------- */
+/* Layarnya kotak senja yang sama dengan total di layar bayar, tapi tombolnya
+   panel gelap solid: tombol ditekan berulang, dan latar yang berpendar di
+   belakang jari membuat angkanya terasa goyang. */
+.kalk__layar{
+  padding:14px 18px 15px;margin-bottom:12px;border-radius:var(--r);text-align:right;color:var(--tinta);
+  background:linear-gradient(160deg,var(--senja-1),var(--senja-2) 58%,var(--senja-3));
+  box-shadow:0 16px 32px -22px rgba(235,140,124,.7);
+}
+.kalk__ekspr{min-height:20px;font-size:13px;font-weight:650;color:rgba(42,20,32,.68);white-space:nowrap;overflow:hidden}
+.kalk__hasil{display:block;margin-top:2px;font-size:44px;font-weight:780;letter-spacing:-.05em;line-height:1.12;color:var(--tinta);white-space:nowrap;overflow:hidden}
+.kalk__hasil.s1{font-size:34px}
+.kalk__hasil.s2{font-size:26px}
+.kalk__hasil.galat{font-size:17px;font-weight:700;letter-spacing:-.01em;line-height:1.5;padding:10px 0 4px;white-space:normal}
+.kalk__riwayat{margin-bottom:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.kalk__riwayat button{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;
+  padding:9px 14px;text-align:left;border-bottom:1px solid var(--line);transition:background .12s;
+}
+.kalk__riwayat button:last-child{border-bottom:0}
+.kalk__riwayat button:active{background:var(--goldsoft)}
+.kalk__riwayat span{min-width:0;font-size:12px;color:var(--txt3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kalk__riwayat b{flex:0 0 auto;font-size:14px;font-weight:750;color:var(--gold)}
+.kalk__pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.kalk__pad button{
+  height:56px;border-radius:15px;background:var(--surface2);border:1px solid var(--line);
+  font-size:20px;font-weight:650;display:grid;place-items:center;font-variant-numeric:tabular-nums;
+  transition:transform .12s ease,background .12s;
+}
+.kalk__pad button:active{transform:scale(.94);background:var(--surface3)}
+.kalk__pad svg{width:21px;height:21px}
+.kalk__pad .op{color:var(--gold);background:var(--goldsoft);border-color:rgba(var(--aksen-rgb),.28);font-size:24px}
+.kalk__pad .fn{color:var(--txt2);font-size:16px;font-weight:750}
+.kalk__pad .c{color:var(--danger);font-size:16px;font-weight:800}
+.kalk__pad .eq{background:linear-gradient(150deg,var(--gold),var(--gold2));color:var(--ink);border-color:transparent;box-shadow:var(--nyala-kuat);font-size:26px}
+/* HP berlayar pendek: riwayat kecil dikorbankan supaya keypad tidak perlu digulung. */
+@media(max-height:720px){.kalk__riwayat{display:none}.kalk__pad button{height:50px}}
 </style>
 </head>
 <body>
@@ -1163,6 +1201,7 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
       <button data-nav="data" class="hanya-server" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Data</button>
       <button data-nav="atur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-2.87 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 2.6 15a1.7 1.7 0 0 0-1.6-1H1a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 2.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 7 4.6h.09A1.7 1.7 0 0 0 8 3V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.09a1.7 1.7 0 0 0 1.6 1.01H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>Atur</button>
     </nav>
+    <button class="iconbtn" id="kalkBtn" title="Kalkulator" aria-label="Buka kalkulator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="3"/><path d="M8 7h8"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></svg></button>
     <button class="iconbtn" id="themeBtn" title="Ganti tema"></button>
   </header>
 
@@ -1381,6 +1420,44 @@ html[data-theme="light"] .item__ava{background:hsl(var(--h) 55% 46% / .12);color
     <div class="sheet__foot">
       <button class="btn" data-close style="flex:0 0 auto">Batal</button>
       <button class="btn btn--gold btn--lg" id="btnFinish" style="flex:1" disabled>Selesaikan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ SHEET: KALKULATOR ══════════════════════════ -->
+<div class="sheet" id="kalkSheet">
+  <div class="sheet__scrim" data-close></div>
+  <div class="sheet__panel kalk">
+    <div class="sheet__grab"></div>
+    <div class="sheet__head">
+      <div style="flex:1"><h3>Kalkulator</h3><p>Hitung manual — tidak masuk transaksi</p></div>
+      <button class="mini" data-close aria-label="Tutup kalkulator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="sheet__body">
+      <div class="kalk__layar" aria-live="polite">
+        <div class="kalk__ekspr" id="kalkEkspr">&nbsp;</div>
+        <b class="money kalk__hasil" id="kalkHasil">0</b>
+      </div>
+      <div class="kalk__riwayat" id="kalkRiwayat" hidden></div>
+      <div class="kalk__pad" id="kalkPad">
+        <button class="c" data-kk="C" aria-label="Hapus semua">C</button>
+        <button class="fn" data-kk="del" aria-label="Hapus satu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9L3 12l6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"/><path d="m17 9-6 6M11 9l6 6"/></svg></button>
+        <button class="fn" data-kk="%" aria-label="Persen">%</button>
+        <button class="op" data-kk="/" aria-label="Bagi">÷</button>
+        <button data-kk="7">7</button><button data-kk="8">8</button><button data-kk="9">9</button>
+        <button class="op" data-kk="*" aria-label="Kali">×</button>
+        <button data-kk="4">4</button><button data-kk="5">5</button><button data-kk="6">6</button>
+        <button class="op" data-kk="-" aria-label="Kurang">−</button>
+        <button data-kk="1">1</button><button data-kk="2">2</button><button data-kk="3">3</button>
+        <button class="op" data-kk="+" aria-label="Tambah">+</button>
+        <button data-kk="000">000</button><button data-kk="0">0</button>
+        <button data-kk="," aria-label="Koma">,</button>
+        <button class="eq" data-kk="=" aria-label="Sama dengan">=</button>
+      </div>
+    </div>
+    <div class="sheet__foot">
+      <button class="btn" data-close style="flex:0 0 auto">Tutup</button>
+      <button class="btn btn--gold btn--lg" id="kalkSalin" style="flex:1">Salin hasil</button>
     </div>
   </div>
 </div>
@@ -3108,6 +3185,182 @@ function copyText(txt, okMsg){
     navigator.clipboard.writeText(txt).then(function(){ toast(okMsg,'ok'); }, fallback);
   }else{ fallback(); }
 }
+
+/* ============================== KALKULATOR MANUAL ============================== */
+/* Kalkulator untuk hitung-hitungan di luar transaksi: ongkos, selisih harga,
+   potongan, bagi rata. Sengaja TIDAK menyentuh keranjang, riwayat, maupun S —
+   tak ada yang tersimpan, jadi tidak ada skema yang perlu dimigrasi.
+
+   Hitungannya dikerjakan penghitung buatan sendiri di bawah, BUKAN eval() atau
+   new Function(): halaman ini dipakai membuka berkas cadangan dan menempel teks
+   dari luar, dan eval di aplikasi seperti ini adalah pintu yang tidak perlu
+   dibuka demi empat operator. Urutannya tetap seperti kalkulator ilmiah
+   (× dan ÷ didahulukan), karena itu yang diharapkan orang yang mengetik
+   "5 + 3 × 2" dan menunggu 11.
+
+   Angka disimpan sebagai teks berformat mesin (titik desimal) selama diketik,
+   dan baru ditampilkan berformat Indonesia (titik ribuan, koma desimal). Kalau
+   dibalik, "0," yang sedang diketik hilang di tengah jalan. */
+var K = { t:[], cur:'', baru:false, galat:'', jejak:'', riwayat:[] };
+var K_OP = { '+':'+', '-':'−', '*':'×', '/':'÷' };
+var K_MAKS = 15;   /* digit; di atas ini pembulatan double mulai terlihat */
+
+function kIsOp(x){ return typeof x === 'string'; }
+function kBulat(v){ return isFinite(v) ? parseFloat(v.toPrecision(12)) : null; }  /* 0.1+0.2 -> 0.3 */
+function kPlain(n){
+  if(Math.abs(n) >= 1e15) return String(n);
+  var s = n.toFixed(8).replace(/\.?0+$/, '');
+  return (s === '' || s === '-0') ? '0' : s;
+}
+function kFmt(n){
+  try{ return new Intl.NumberFormat('id-ID', { maximumFractionDigits:8 }).format(n); }
+  catch(e){ return String(n).replace('.', ','); }
+}
+function kFmtCur(s){
+  var neg = s.charAt(0) === '-', b = neg ? s.slice(1) : s, p = b.split('.');
+  var ent = (p[0] || '0').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return (neg ? '-' : '') + ent + (p.length > 1 ? ',' + p[1] : '');
+}
+function kTeks(x){ return kIsOp(x) ? K_OP[x] : kFmt(x); }
+
+/* Hasil dari deretan [angka, op, angka, ...]. Mengembalikan null kalau tak bisa
+   dihitung, dan alasannya ditaruh di kSebab — dibagi nol dan melimpah (angka
+   terlalu besar) sama-sama null, tapi pesannya harus berbeda. */
+var kSebab = '';
+function kHitung(t){
+  var a = t.slice(), i = 1, r, v;
+  kSebab = '';
+  while(i < a.length){
+    if(a[i] === '*' || a[i] === '/'){
+      if(a[i] === '/' && a[i+1] === 0){ kSebab = 'Tidak bisa dibagi nol'; return null; }
+      r = a[i] === '*' ? a[i-1] * a[i+1] : a[i-1] / a[i+1];
+      a.splice(i - 1, 3, r);
+    }else{ i += 2; }
+  }
+  v = a[0];
+  for(i = 1; i < a.length; i += 2){ v = a[i] === '+' ? v + a[i+1] : v - a[i+1]; }
+  v = kBulat(v);
+  if(v == null) kSebab = 'Angkanya terlalu besar';
+  return v;
+}
+/* Deretan yang siap dihitung: angka yang sedang diketik ikut; operator yang
+   menggantung di ujung dibuang. */
+function kSusun(){
+  var a = K.t.slice();
+  if(K.cur !== '') a.push(Number(K.cur));
+  else if(a.length && kIsOp(a[a.length - 1])) a.pop();
+  return a;
+}
+
+function kReset(){ K.t = []; K.cur = ''; K.baru = false; K.galat = ''; K.jejak = ''; }
+function kMulaiBaru(){ if(K.baru){ K.t = []; K.cur = ''; K.baru = false; K.jejak = ''; } }
+
+function kTekan(k){
+  buzz(8);
+  if(K.galat){ kReset(); if(k === 'C' || k === 'del'){ kRender(); return; } }
+  var r, n;
+  if(/^\d+$/.test(k)){                                   /* 0-9 dan 000 */
+    kMulaiBaru();
+    if(K.cur === '' || K.cur === '0') K.cur = (k === '000') ? '0' : k;
+    else if(K.cur.replace(/\D/g, '').length + k.length <= K_MAKS) K.cur += k;
+  }else if(k === ','){
+    kMulaiBaru();
+    if(K.cur === '') K.cur = '0.';
+    else if(K.cur.indexOf('.') < 0 && K.cur.length < K_MAKS) K.cur += '.';
+  }else if(k === '+' || k === '-' || k === '*' || k === '/'){
+    if(K.baru){ K.baru = false; K.jejak = ''; }
+    if(K.cur !== ''){ K.t.push(Number(K.cur)); K.cur = ''; K.t.push(k); }
+    else if(K.t.length && kIsOp(K.t[K.t.length - 1])) K.t[K.t.length - 1] = k;   /* ganti pikiran */
+    else if(!K.t.length){ K.t.push(0); K.t.push(k); }
+  }else if(k === '%'){
+    if(K.cur === '') return kRender();
+    if(K.baru){ K.baru = false; K.jejak = ''; }
+    n = Number(K.cur);
+    var op = K.t.length ? K.t[K.t.length - 1] : '';
+    if(op === '+' || op === '-'){                        /* 200 + 10% = 220 */
+      var dasar = kHitung(K.t.slice(0, -1));
+      n = dasar == null ? 0 : dasar * n / 100;
+    }else{ n = n / 100; }                                /* 50 x 10% = 5 */
+    K.cur = kPlain(kBulat(n) || 0);
+  }else if(k === 'del'){
+    if(K.baru){ K.baru = false; K.jejak = ''; }
+    if(K.cur !== ''){ K.cur = K.cur.slice(0, -1); if(K.cur === '-') K.cur = ''; }
+    else if(K.t.length){
+      K.t.pop();                                         /* operator terakhir */
+      if(K.t.length) K.cur = kPlain(K.t.pop());          /* angkanya jadi bisa diedit lagi */
+    }
+  }else if(k === 'C'){
+    kReset();
+  }else if(k === '='){
+    var a = kSusun();
+    if(a.length < 3) return kRender();
+    r = kHitung(a);
+    if(r == null){ K.galat = kSebab || 'Tidak bisa dihitung'; K.jejak = a.map(kTeks).join(' '); }
+    else{
+      K.jejak = a.map(kTeks).join(' ') + ' =';
+      K.riwayat.unshift({ e:a.map(kTeks).join(' '), r:r });
+      if(K.riwayat.length > 20) K.riwayat.pop();
+      K.t = []; K.cur = kPlain(r); K.baru = true;
+    }
+  }
+  kRender();
+}
+
+function kLayar(){
+  if(K.galat) return K.galat;
+  if(K.cur !== '') return kFmtCur(K.cur);
+  var a = kSusun();
+  if(a.length >= 3){ var r = kHitung(a); return r == null ? '0' : kFmt(r); }
+  return a.length ? kFmt(a[0]) : '0';
+}
+function kRender(){
+  var ek = K.baru || K.galat ? K.jejak : K.t.map(kTeks).join(' ') + (K.cur !== '' ? (K.t.length ? ' ' : '') + kFmtCur(K.cur) : '');
+  if(ek.length > 30) ek = '…' + ek.slice(-29);
+  $('#kalkEkspr').textContent = ek || ' ';
+  var h = kLayar(), el = $('#kalkHasil');
+  el.textContent = h;
+  el.className = 'money kalk__hasil' + (K.galat ? ' galat' : h.length > 15 ? ' s2' : h.length > 11 ? ' s1' : '');
+  var box = $('#kalkRiwayat');
+  if(!K.riwayat.length){ box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false;
+  box.innerHTML = K.riwayat.slice(0, 3).map(function(x, i){
+    return '<button data-rw="' + i + '"><span>' + esc(x.e) + ' =</span><b class="money">' + esc(kFmt(x.r)) + '</b></button>';
+  }).join('');
+}
+
+$('#kalkBtn').addEventListener('click', function(){ openSheet('#kalkSheet'); kRender(); });
+$('#kalkPad').addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('[data-kk]') : null;
+  if(b) kTekan(b.getAttribute('data-kk'));
+});
+$('#kalkRiwayat').addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('[data-rw]') : null;
+  var x = b ? K.riwayat[Number(b.getAttribute('data-rw'))] : null;
+  if(!x) return;
+  buzz(8);
+  K.t = []; K.cur = kPlain(x.r); K.baru = true; K.galat = ''; K.jejak = x.e + ' =';   /* pakai lagi hasilnya */
+  kRender();
+});
+$('#kalkSalin').addEventListener('click', function(){
+  if(K.galat){ toast('Belum ada hasil yang bisa disalin', 'err'); return; }
+  var txt = kLayar();
+  copyText(txt, 'Hasil disalin: ' + txt);
+});
+/* Papan ketik di laptop. Hanya aktif selagi kalkulator terbuka, dan Enter-nya
+   ditahan supaya tidak ikut menekan tombol yang sedang berfokus (mis. Salin). */
+document.addEventListener('keydown', function(e){
+  if(!$('#kalkSheet').classList.contains('open') || e.ctrlKey || e.metaKey || e.altKey) return;
+  var k = e.key, m = '';
+  if(/^[0-9]$/.test(k)) m = k;
+  else if(k === '+' || k === '-' || k === '/') m = k;
+  else if(k === '*' || k === 'x' || k === 'X') m = '*';
+  else if(k === '.' || k === ',') m = ',';
+  else if(k === '%') m = '%';
+  else if(k === 'Enter' || k === '=') m = '=';
+  else if(k === 'Backspace') m = 'del';
+  else if(k === 'Delete' || k === 'c' || k === 'C') m = 'C';
+  if(m){ e.preventDefault(); kTekan(m); }
+});
 
 /* ============================== PRODUK: CRUD ============================== */
 $('#qp').addEventListener('input', function(e){ S.ui.qp = e.target.value.toLowerCase(); renderProdukList(); });
